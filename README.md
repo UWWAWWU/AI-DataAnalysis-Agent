@@ -1,23 +1,127 @@
+<div align="center">
+
+<img src="public/favicon.svg" alt="AI Data Analysis Agent" width="72" />
+
 # AI Data Analysis Agent
 
-An adaptive dashboard for uploaded CSV and XLSX files, with automatic analysis planning, isolated Python calculations, instant local filters, AI chat, data review and JSON/CSV/PDF exports.
+**From raw data to a clearer picture.**
 
-## Deploy to Vercel
+An intelligent workspace that turns CSV and Excel files into interactive dashboards, grounded insights, and a conversation with your data.
 
-Import this repository into Vercel as a Next.js project. Use Node.js 22 or 24, `npm install`, and `npm run build`.
+</div>
 
-Configure server-only environment variables: `GEMINI_API_KEY` (optional if the compatible provider is configured), `RELINK_API_KEY`, `RELINK_BASE_URL`, and `E2B_API_KEY`. Never prefix these with `NEXT_PUBLIC_` or commit their values.
+---
 
-The website is publicly accessible, as requested. API requests use the server's configured provider accounts.
+## Overview
 
-Uploaded files up to 40 MB go directly from the browser to an isolated E2B sandbox through a short-lived signed URL. Computed dashboard data returns through a signed download URL, avoiding Vercel's 4.5 MB function payload limit. The sandbox closes after retrieval, or automatically expires after five minutes. Only validated dashboard specifications run through trusted Python code.
+AI Data Analysis Agent helps people explore a dataset without starting from a blank notebook or building a dashboard manually. Upload a file, let the agent examine its structure and propose a suitable analysis, then explore the resulting metrics and visualizations.
 
-Set the production project domain to `aiagent.wawutriambodo.my.id` and apply the DNS record Vercel specifies. A suitable generated domain is `aiagent-wawutriambodo.vercel.app`, subject to availability.
+The dashboard adapts to the uploaded data. A retail dataset can reveal sales trends and market performance; a different dataset can produce a different set of metrics and charts based on its available columns.
 
-## Local development
+The project combines language models for analysis planning and explanations, Python for calculations, and a browser-based dashboard for interactive exploration.
 
-Copy `.env.example` to `.env.local`, fill in the server keys, then run `npm install` and `npm run dev`.
+## What you can do
 
-## Verification
+| Feature | Experience |
+| --- | --- |
+| **Automatic exploration** | Upload CSV or XLSX and let the agent identify useful metrics, dimensions, and visualizations. |
+| **Adaptive dashboards** | Explore KPI cards and charts selected for the structure of your dataset. |
+| **Instant filtering** | Change supported filters after the dashboard is prepared; cached aggregates update the view locally. |
+| **AI conversation** | Ask about findings, request another analysis, or change how a chart is presented. |
+| **Data profiling** | Inspect columns, missing values, and identical rows through Data Details. |
+| **Data Review** | Preview rows requested through the AI assistant, including exact duplicates. |
+| **Controlled cleaning** | Review proposed duplicate removal and apply it when you are ready to update the dashboard. |
+| **Report exports** | Download JSON analysis results, CSV data with applied cleaning, or a PDF report. |
+| **Two languages** | Use English or Indonesian for the interface and analysis explanations. |
 
-Run `npm run typecheck`, `node scripts/check-sandbox-ticket.mjs`, and the applicable `scripts/check-*.mjs` checks. Build with `npm run build`. Live provider tests require configured accounts; a successful build does not verify their availability.
+## From upload to insight
+
+1. **Upload your dataset.** Select a CSV or XLSX file, up to 40 MB.
+2. **Understand its structure.** The workspace profiles the columns, completeness, and duplicate rows.
+3. **Let the agent plan.** AI proposes metrics and charts using the available columns. When a definition needs clarification, it asks a question.
+4. **Calculate the results.** A validated dashboard specification runs through trusted Python code in an isolated sandbox.
+5. **Explore the dashboard.** Review KPIs, visualizations, and an analysis brief; change supported filters without rerunning the AI.
+6. **Continue the analysis.** Use the AI assistant to add a chart, explain a result, or inspect data before applying a change.
+
+## The agent architecture
+
+```mermaid
+flowchart TD
+    U["CSV or XLSX upload"] --> P["Data profiling"]
+    P --> A["AI analysis planning"]
+    A --> V["Specification validation"]
+    V --> S["Isolated Python calculation"]
+    S --> D["Interactive dashboard"]
+    D --> C["AI conversation"]
+    C --> A
+    C --> R["Data Review"]
+    R --> X["Apply approved cleaning"]
+    X --> A
+```
+
+### Planning
+
+Language models interpret the dataset summary and the user's request to propose an analysis. Plans use the supplied column names and pass through structural validation before execution.
+
+### Calculation
+
+Python, Pandas, and NumPy calculate the dashboard's aggregates inside an isolated E2B sandbox. The computation uses trusted application code driven by the validated specification.
+
+### Explanation
+
+AI writes explanations using verified facts from the calculated results and active selection. The chat can also request a new dashboard configuration or a supported visualization change.
+
+### Interaction
+
+The browser keeps prepared dashboard aggregates so supported filters respond quickly. Data Review provides a separate place to inspect proposed cleaning before committing it.
+
+This is an application built around existing language models accessed through APIs. Its development focuses on agent orchestration, validation, analytical computation, and the user experience.
+
+## Data Review and duplicate handling
+
+Two rows are considered identical only when their values match across **all columns**. Timestamp differences are preserved: records at `08:26` and `08:27` are distinct.
+
+Inspecting duplicates leaves the working dataset unchanged. **Apply Changes** keeps one copy of each exact duplicate within the reviewed scope and updates the dashboard after the user approves the change.
+
+CSV exports reflect the working dataset and cleaning that has actually been applied.
+
+## Example requests
+
+> Add a monthly Quantity chart to the dashboard. Keep the existing charts.
+
+> Change the country comparison to a horizontal bar chart.
+
+> Show rows that are identical across every column in Data Review. Keep the complete InvoiceDate timestamp. Do not delete them yet.
+
+> Explain the main findings for the active filters in Indonesian.
+
+Available actions depend on the columns, results, and visualization types supported by the application.
+
+## Technology
+
+| Layer | Technology |
+| --- | --- |
+| Web application | Next.js, React, TypeScript |
+| Interface | Tailwind CSS, Radix UI |
+| Visualization | Recharts |
+| File processing | SheetJS, browser Web Workers |
+| Analytical computation | Python, Pandas, NumPy |
+| Isolated execution | E2B Code Interpreter |
+| AI integration | Google model API and an OpenAI-compatible API |
+| PDF reporting | jsPDF |
+
+## Analytical scope
+
+Metrics depend on the dataset's structure and the definitions selected for the analysis. Missing values, returns, and cancellations can affect how a metric should be interpreted. The workspace preserves these distinctions through the analysis plan and its definitions.
+
+AI explanations help interpret calculated results; they do not establish causation or replace validation of business definitions.
+
+---
+
+<div align="center">
+
+**Upload. Explore. Ask. Understand.**
+
+AI Data Analysis Agent · An interactive workspace for data analysis
+
+</div>
