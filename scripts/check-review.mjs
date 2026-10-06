@@ -1,0 +1,36 @@
+import fs from 'node:fs';
+import assert from 'node:assert/strict';
+import {pathToFileURL} from 'node:url';
+const review=await import('../public/review-engine.js');
+const rows=[{Country:'UK',Quantity:6,InvoiceDate:new Date('2011-01-01T08:26:00Z')},{Country:'UK',Quantity:6,InvoiceDate:new Date('2011-01-01T08:26:00Z')},{Country:'UK',Quantity:6,InvoiceDate:new Date('2011-01-01T08:27:00Z')}];
+assert.deepEqual(review.duplicateIndexes(rows),[[0,1]]);
+assert.deepEqual(review.duplicateIndexes([...rows,{...rows[0],Extra:'different'}]),[[0,1]]);
+assert.deepEqual(review.duplicateIndexes([rows[0],{...rows[0],InvoiceDate:new Date('2011-01-01T08:26:00.001Z')}]),[]);
+const plan={operation:'inspect',scope:'all',selection:{kind:'duplicates',rules:[]}};
+assert.throws(()=>review.validateReview({...plan,selection:{kind:'rows',rules:[]}}));
+assert.throws(()=>review.validateReview({...plan,selection:{kind:'rows',rules:[{column:'Unknown',op:'eq',value:1}]}},['Country']));
+let output;const self={postMessage:x=>{output=x}};
+let source=fs.readFileSync('public/data-worker.js','utf8').replaceAll("'/engine.js'",JSON.stringify(pathToFileURL(process.cwd()+'/public/engine.js').href)).replaceAll("'/dashboard-engine.js'",JSON.stringify(pathToFileURL(process.cwd()+'/public/dashboard-engine.js').href)).replaceAll("'/review-engine.js'",JSON.stringify(pathToFileURL(process.cwd()+'/public/review-engine.js').href));
+const set=new Function('self',source+';return (r,c)=>{data=r;cube=c}')(self);
+const spec={countryColumn:'Country',dateColumn:'InvoiceDate',metrics:[{id:'q',operation:'sum',columns:['Quantity'],rules:[]}],kpis:[{label:'Quantity',metric:'q'}],charts:[]};
+const v=(n)=>({rows:[['UK','2011-01',n]],metrics:[['UK','2011-01',0,[n*6,n,[]]]],charts:[]});
+set(rows,{spec,variants:[v(3),v(2)]});
+const filter={country:'',from:'',to:'',deduplicate:false};
+async function call(action,args={}){await self.onmessage({data:{requestId:1,action,...args}});if(output.error)throw Error(output.error);return output.result}
+const inspected=await call('review',{plan,filter});assert.equal(inspected.matchingRows,2);assert.equal(inspected.pending,false);assert.equal(inspected.canApplyDuplicates,true);assert.equal((await call('filterDashboard',{filter})).rows,3);
+const beforeCSV=await call('exportClean');assert.equal(beforeCSV.split('\r\n').length,4);
+await call('reviewStageDuplicates');assert.equal((await call('filterDashboard',{filter})).rows,3);await call('reviewDiscard');
+let staged=await call('review',{plan:{...plan,operation:'remove_duplicates'},filter});assert.equal(staged.removedRows,1);assert.equal(staged.draftRows,2);assert.equal(staged.pending,true);
+assert.equal((await call('filterDashboard',{filter})).kpis.Quantity,18);
+assert.equal((await call('review',{plan,filter})).matchingRows,0);
+await call('reviewDiscard');assert.equal((await call('review',{plan,filter})).matchingRows,2);
+await call('review',{plan:{...plan,operation:'remove_duplicates'},filter});
+assert.equal((await call('reviewApplyDedup',{filter})).result.kpis.Quantity,12);
+assert.equal((await call('filterDashboard',{filter})).rows,2);
+assert.equal((await call('review',{plan,filter})).matchingRows,0);
+const remove={operation:'remove_matching',scope:'all',selection:{kind:'rows',rules:[{column:'Quantity',op:'eq',value:6}]}};
+await assert.rejects(call('review',{plan:remove,filter}),/every row/);
+assert.equal((await call('filterDashboard',{filter})).rows,2);
+console.log('Review checks passed: exact timestamps, validation, staging, discard, apply, and empty-dataset guard.');
+
+const cleanCSV=await call('exportClean',{filter:{...filter,country:'Nowhere'}});assert.equal(cleanCSV.split('\r\n').length,3);assert.ok(cleanCSV.includes(`${String(rows[2].InvoiceDate.getHours()).padStart(2,'0')}:27:00`));

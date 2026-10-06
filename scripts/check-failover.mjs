@@ -1,0 +1,12 @@
+import fs from 'node:fs';import ts from 'typescript';import assert from 'node:assert/strict';
+const code=ts.transpileModule(fs.readFileSync('lib/model-failover.ts','utf8'),{compilerOptions:{module:ts.ModuleKind.ESNext,target:ts.ScriptTarget.ES2022}}).outputText;
+const {withModelFailover}=await import('data:text/javascript;base64,'+Buffer.from(code).toString('base64'));
+const models=['a','b','c','d'].map(id=>({id,label:id}));const failure=code=>Object.assign(new Error('failed'),{code});
+let seen=[];const r=await withModelFailover('a',models,async id=>{seen.push(id);if(id==='a')throw failure('AI_HTTP_503');return {ok:true}});assert.deepEqual(seen,['a','b']);assert.equal(r.model,'b');assert.deepEqual(r.attempted,['a','b']);
+seen=[];await withModelFailover('b',models,async id=>{seen.push(id);if(id==='b')throw failure('AI_TIMEOUT');return true});assert.deepEqual(seen,['b','a']);
+seen=[];await assert.rejects(withModelFailover('a',models,async id=>{seen.push(id);throw failure('AI_HTTP_429')}));assert.deepEqual(seen,['a']);
+seen=[];await assert.rejects(withModelFailover('a',models,async id=>{seen.push(id);throw failure('AI_HTTP_503')}),e=>e.code==='AI_MODELS_UNAVAILABLE');assert.deepEqual(seen,['a','b','c']);
+seen=[];await withModelFailover('removed',models,async id=>{seen.push(id);return true});assert.deepEqual(seen,['a']);
+seen=[];await withModelFailover('selected',[],async id=>{seen.push(id);return true});assert.deepEqual(seen,['selected']);
+seen=[];await assert.rejects(withModelFailover('a',models,async id=>{seen.push(id);throw failure('AI_VALIDATION')}));assert.deepEqual(seen,['a']);
+console.log('Failover checks passed: selected first, 503 and timeout switches, quota stops, attempt cap, catalog filtering, unknown catalog, invalid-output stop.');

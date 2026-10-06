@@ -1,0 +1,15 @@
+{
+  "framework": "nextjs",
+  "buildCommand": "npm run build",
+  "functions": {
+    "app/api/ai/route.ts": {
+      "maxDuration": 180
+    },
+    "app/api/python/route.ts": {
+      "maxDuration": 180
+    },
+    "app/api/python/upload/route.ts": {
+      "maxDuration": 60
+    }
+  }
+}

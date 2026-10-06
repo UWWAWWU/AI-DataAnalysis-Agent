@@ -1,0 +1,10 @@
+import fs from 'node:fs';
+import assert from 'node:assert/strict';
+import XLSX from 'xlsx';
+import {analyze,profile,selectRows,executePlan} from '../public/engine.js';
+const book=XLSX.read(fs.readFileSync(process.argv[2]),{type:'buffer',cellDates:true});
+const rows=XLSX.utils.sheet_to_json(book.Sheets[book.SheetNames[0]],{defval:null});
+const p=profile(rows),r=analyze(rows);assert.equal(p.rows,541909);assert.equal(p.duplicates,5268);assert.equal(p.columns.find(c=>c.name==='CustomerID').missing,135080);assert.equal(r.kpis['Valid orders'],19960);assert.ok(Math.abs(r.kpis['Gross sales']-10666684.544)<0.01);
+const f=selectRows(rows,{country:'France'});assert.equal(f.length,8557);assert.equal(selectRows(rows,{deduplicate:true}).length,536641);
+const generic=[{category:'a',value:10},{category:'b',value:20},{category:'a',value:30}];assert.equal(analyze(generic).rows,3);const c=executePlan(generic,{action:'aggregate',groupBy:'category',metric:'value',operation:'sum'});assert.deepEqual(c.values,[40,20]);assert.throws(()=>executePlan(generic,{action:'aggregate',groupBy:'bad',operation:'count'}));assert.throws(()=>executePlan(rows,{action:'aggregate',groupBy:'Country',metric:'CustomerID',operation:'sum'}));
+console.log(JSON.stringify({rows:p.rows,kpis:r.kpis,tests:'retail/profile/filter/dedup/generic/tool validation passed'}));

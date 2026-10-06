@@ -1,0 +1,8 @@
+import fs from 'node:fs';import ts from 'typescript';import assert from 'node:assert/strict';
+const source=fs.readFileSync('app/analyst.tsx','utf8');const fn=source.slice(source.indexOf('    async function ask()'),source.indexOf('    async function retryInsight()'));
+const compiled=ts.transpileModule(fn,{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText;
+async function scenario(success){let release;const pending=new Promise(resolve=>{release=resolve});const messages=[];let updating=false;const no=()=>{};
+ const context={question:'Tambahkan grafik penjualan',busy:false,setQuestion:no,setChatBusy:no,setMessages:update=>{messages.splice(0,messages.length,...update(messages))},ai:async()=>({action:'update',answer:'EARLY PROPOSAL MUST NOT APPEAR',language:'id'}),locale:'en',setChatReplyLanguage:no,setChatUpdating:value=>{updating=value},setGoal:no,setPendingInsight:no,requestLanguage:{current:null},prepare:()=>pending,profile:{},filter:{},localRef:{current:{}},plan:{},setPlan:no};
+ const ask=new Function(...Object.keys(context),compiled+';return ask;')(...Object.values(context));const task=ask();await new Promise(resolve=>setImmediate(resolve));assert.equal(updating,true);assert.deepEqual(messages.map(m=>m.role),['You']);assert.ok(!messages.some(m=>m.text.includes('EARLY')));release(success);await task;assert.equal(updating,false);assert.equal(messages.at(-1).role,success?'AI':'Status');assert.match(messages.at(-1).text,success?/berhasil diperbarui/:/gagal diperbarui/);assert.equal(context.requestLanguage.current,null);
+}
+await scenario(true);await scenario(false);console.log('Actual chat flow passed: no early answer; success and failure appear only after update completion.');

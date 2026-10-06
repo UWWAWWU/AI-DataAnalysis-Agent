@@ -1,0 +1,17 @@
+import fs from 'node:fs';import ts from 'typescript';import assert from 'node:assert/strict';
+const mod=async path=>import('data:text/javascript;base64,'+Buffer.from(ts.transpileModule(fs.readFileSync(path,'utf8'),{compilerOptions:{module:ts.ModuleKind.ESNext,target:ts.ScriptTarget.ES2022}}).outputText).toString('base64'));
+const {parseAIResponse,PLAN_SCHEMA}=await mod('lib/ai-response.ts');
+const response=(text,finishReason='STOP')=>({candidates:[{finishReason,content:{parts:[{thought:true,text:'ignore thinking'},{text}]}}]});
+assert.deepEqual(parseAIResponse(response('```json\n{"ok":true}\n```')),{ok:true});
+assert.throws(()=>parseAIResponse(response('{"unfinished":')),e=>e.code==='AI_JSON');
+assert.throws(()=>parseAIResponse(response('{}','MAX_TOKENS')),e=>e.code==='AI_TRUNCATED');
+assert.throws(()=>parseAIResponse({}),e=>e.code==='AI_EMPTY');
+assert.throws(()=>parseAIResponse({promptFeedback:{blockReason:'SAFETY'}}),e=>e.code==='AI_BLOCKED');
+assert.ok(PLAN_SCHEMA.required.includes('dashboard'));assert.ok(!PLAN_SCHEMA.required.includes('code'));
+const {analysisModels}=await mod('lib/model-options.ts');
+const names=['gemini-3.8-flash','gemini-3.7-flash','gemini-3.5-flash-lite','gemini-3.6-flash','gemini-3.5-flash','gemini-3.1-flash-lite','gemini-3.1-pro-preview','gemini-3.1-pro-preview-customtools','gemini-3.8-flash-image','gemini-2.5-pro'];
+const models=analysisModels(names.map(name=>({name:'models/'+name,supportedGenerationMethods:['generateContent']})));
+assert.deepEqual(models.map(m=>m.id),names.slice(0,7));assert.equal(models.at(-1).label,'3.1 Pro · Preview');
+assert.deepEqual(analysisModels([{name:'gemini-3.8-flash',supportedGenerationMethods:['embedContent']}]),[]);
+assert.deepEqual(analysisModels([{name:'gemini-3.1-pro',supportedGenerationMethods:['generateContent']},{name:'gemini-3.1-pro-preview',supportedGenerationMethods:['generateContent']}]).map(m=>m.id),['gemini-3.1-pro']);
+console.log('AI response and model catalog checks passed.');

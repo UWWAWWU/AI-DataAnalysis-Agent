@@ -1,0 +1,12 @@
+import fs from 'node:fs';import assert from 'node:assert/strict';import ts from 'typescript';
+process.env.E2B_API_KEY='test-only-not-a-provider-key';
+const output=ts.transpileModule(fs.readFileSync('lib/sandbox-ticket.ts','utf8'),{compilerOptions:{module:ts.ModuleKind.ESNext,target:ts.ScriptTarget.ES2022}}).outputText;
+const {issueTicket,verifyTicket,checkOrigin}=await import('data:text/javascript;base64,'+Buffer.from(output).toString('base64'));
+const session={id:'test-sandbox',path:'/home/user/input.csv',isExcel:false,expires:Date.now()+60000};
+const ticket=issueTicket(session);assert.deepEqual(verifyTicket(ticket),session);
+assert.throws(()=>verifyTicket(ticket+'changed'));
+assert.throws(()=>verifyTicket(issueTicket({...session,expires:Date.now()-1})));
+assert.throws(()=>verifyTicket(issueTicket({...session,path:'/etc/passwd'})));
+assert.throws(()=>checkOrigin(new Request('https://agent.example/api/python',{headers:{origin:'https://other.example'}})));
+checkOrigin(new Request('https://agent.example/api/python',{headers:{origin:'https://agent.example'}}));
+console.log('Signed sandbox sessions, expiry, file scope and origin checks passed.');
