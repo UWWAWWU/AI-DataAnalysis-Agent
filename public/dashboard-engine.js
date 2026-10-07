@@ -10,6 +10,8 @@ export function validateSpec(v, columns) {
         for (const key of ['metric', 'numerator', 'denominator', 'denominatorExtra', 'scale'])
             if (kpi[key] === null)
                 delete kpi[key];
+    if (s.kpiPlacement && !['auto', 'horizontal', 'sidebar', 'grouped'].includes(s.kpiPlacement))
+        throw Error('Invalid dashboard layout.');
     if (s.layout && !['kpi-first', 'charts-first'].includes(s.layout))
         throw Error('Invalid dashboard layout.');
     const col = (x) => typeof x === 'string' && (!columns || columns.includes(x));
