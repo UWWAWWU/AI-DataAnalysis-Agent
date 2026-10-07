@@ -26,7 +26,7 @@ The project combines language models for analysis planning and explanations, Pyt
 | --- | --- |
 | **Automatic exploration** | Upload CSV or XLSX and let the agent identify useful metrics, dimensions, and visualizations. |
 | **Adaptive dashboards** | Explore KPI cards, bar, horizontal bar, line, area, pie, donut, treemap, histogram, scatter and box plots selected for your dataset. |
-| **Chart controls** | Switch compatible chart types, sort categories, choose the displayed category count, expand charts and inspect underlying values. |
+| **Chart controls** | AI defaults appear first. Switch among data-compatible plots, including alternative views of scatter, histogram and box plots; category controls adapt to the selected view. Stable category colors remain consistent across charts and filters. |
 | **Instant filtering** | Change supported filters after the dashboard is prepared; cached aggregates update the view locally. |
 | **AI conversation** | Ask about findings, request another analysis, or change how a chart is presented. |
 | **Data profiling** | Inspect columns, missing values, and identical rows through Data Details. |

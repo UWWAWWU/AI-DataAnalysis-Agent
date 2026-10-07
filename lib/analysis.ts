@@ -1,6 +1,6 @@
 export type Row=Record<string,unknown>;
 export type Profile={rows:number;duplicates:number;columns:{name:string;type:string;missing:number}[];preview:Row[];countries:string[];months:string[]};
-export type Chart={displayView?:'table';title:string;labels:string[];values:number[];view?:string;width?:string;time?:boolean;points?:{x:number;y:number}[];boxes?:{name:string;low:number;q1:number;median:number;q3:number;high:number}[];sampled?:boolean;xColumn?:string;yColumn?:string};
+export type Chart={displayView?:'table';title:string;labels:string[];values:number[];view?:string;width?:string;time?:boolean;points?:{x:number;y?:number;group?:string}[];boxes?:{name:string;low:number;q1:number;median:number;q3:number;high:number}[];sampled?:boolean;groupColumn?:string;xColumn?:string;yColumn?:string};
 export type Result={rows:number;kpis:Record<string,number>;charts:Chart[];definitions:string[]};
 export const empty=(v:unknown)=>v==null||v==='';
 export function num(v:unknown){if(empty(v))return null;let n=Number(v);return Number.isFinite(n)?n:null}

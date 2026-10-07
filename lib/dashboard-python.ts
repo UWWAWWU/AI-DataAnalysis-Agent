@@ -77,6 +77,13 @@ for _dedup in [False,True]:
                 variant['histogramLabels'][str(j)]=[format(edges[k],'.8g')+' — '+format(edges[k+1],'.8g') for k in range(len(edges)-1)]
                 numbers=pd.to_numeric(part[chart['xColumn']],errors='coerce').replace([np.inf,-np.inf],np.nan)
                 part=part.loc[numbers.notna()].copy()
+                part['__x__']=numbers.loc[part.index]
+                for _,segment in part.groupby(base,sort=False):
+                    if len(segment)>1000:
+                        segment=segment.sample(1000,random_state=42)
+                        if j not in variant['sampledCharts']: variant['sampledCharts'].append(j)
+                    for _,row in segment.iterrows():
+                        variant['observations'].append([row[base[0]],row[base[1]],j,str(row[chart['groupBy']]) if pd.notna(row[chart['groupBy']]) else '(missing)',float(row['__x__']),0.0])
                 positions=np.clip(np.searchsorted(edges,numbers.loc[part.index],side='right')-1,0,len(edges)-2)
                 part['__group__']=[format(edges[k],'.8g')+' — '+format(edges[k+1],'.8g') for k in positions]
             else:
