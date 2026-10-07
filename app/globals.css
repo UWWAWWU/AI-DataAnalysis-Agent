@@ -132,3 +132,5 @@
 .model-options [data-radix-select-viewport]::-webkit-scrollbar-thumb{background:#b5a38e;border:2px solid #f2ece3;border-radius:8px}
 
 .language-status{display:flex;align-items:center;gap:8px;color:#827a73;font-size:12px;margin:10px 0}
+
+.chart-panel select{max-width:100%;border:1px solid #e6e0d9;border-radius:8px;background:#faf8f5;color:#51473f;padding:6px 9px;font-size:12px}.chart-panel select:focus-visible,.chart-heading button:focus-visible{outline:2px solid #bc613d;outline-offset:2px}.chart-heading button{border:1px solid #e6e0d9;border-radius:8px;padding:6px 9px;font-size:12px}.chart-values table{width:100%;text-align:left}.chart-values th,.chart-values td{padding:6px 10px;border-bottom:1px solid #eee7df}

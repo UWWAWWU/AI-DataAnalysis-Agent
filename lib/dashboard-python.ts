@@ -51,7 +51,7 @@ for _dedup in [False,True]:
     frame['__dash_country__']=_text(_series(frame,_spec['countryColumn']))
     frame['__dash_month__']=pd.to_datetime(_series(frame,_spec['dateColumn']),errors='coerce').dt.strftime('%Y-%m').fillna('') if _spec['dateColumn'] else pd.Series('',index=frame.index)
     base=['__dash_country__','__dash_month__']
-    variant={'rows':[[c,d,int(n)] for (c,d),n in frame.groupby(base,sort=False).size().items()],'metrics':[],'charts':[],'observations':[],'sampledCharts':[]}
+    variant={'rows':[[c,d,int(n)] for (c,d),n in frame.groupby(base,sort=False).size().items()],'metrics':[],'charts':[],'observations':[],'sampledCharts':[],'histogramLabels':{}}
     for i,metric in enumerate(_spec['metrics']):
         part=_metric_frame(frame,metric)
         for key,stats in _aggregate(part,base,metric): variant['metrics'].append(key+[i,stats])
@@ -74,6 +74,7 @@ for _dedup in [False,True]:
                 source=pd.to_numeric(_src[chart['xColumn']],errors='coerce').replace([np.inf,-np.inf],np.nan).dropna()
                 if source.empty: continue
                 edges=np.histogram_bin_edges(source,bins=chart.get('bins',10))
+                variant['histogramLabels'][str(j)]=[format(edges[k],'.8g')+' — '+format(edges[k+1],'.8g') for k in range(len(edges)-1)]
                 numbers=pd.to_numeric(part[chart['xColumn']],errors='coerce').replace([np.inf,-np.inf],np.nan)
                 part=part.loc[numbers.notna()].copy()
                 positions=np.clip(np.searchsorted(edges,numbers.loc[part.index],side='right')-1,0,len(edges)-2)
