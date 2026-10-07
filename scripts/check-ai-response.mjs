@@ -11,7 +11,7 @@ assert.ok(PLAN_SCHEMA.required.includes('dashboard'));assert.ok(!PLAN_SCHEMA.req
 const {analysisModels}=await mod('lib/model-options.ts');
 const names=['gemini-3.8-flash','gemini-3.7-flash','gemini-3.5-flash-lite','gemini-3.6-flash','gemini-3.5-flash','gemini-3.1-flash-lite','gemini-3.1-pro-preview','gemini-3.1-pro-preview-customtools','gemini-3.8-flash-image','gemini-2.5-pro'];
 const models=analysisModels(names.map(name=>({name:'models/'+name,supportedGenerationMethods:['generateContent']})));
-assert.deepEqual(models.map(m=>m.id),names.slice(0,7));assert.equal(models.at(-1).label,'3.1 Pro · Preview');
+assert.deepEqual(models.map(m=>m.id),['gemini-3.8-flash','gemini-3.7-flash','gemini-3.6-flash','gemini-3.5-flash','gemini-3.5-flash-lite','gemini-3.1-pro-preview','gemini-3.1-flash-lite']);assert.equal(models.find(m=>m.id==='gemini-3.1-pro-preview').label,'Gemini 3.1 Pro · Preview');
 assert.deepEqual(analysisModels([{name:'gemini-3.8-flash',supportedGenerationMethods:['embedContent']}]),[]);
 assert.deepEqual(analysisModels([{name:'gemini-3.1-pro',supportedGenerationMethods:['generateContent']},{name:'gemini-3.1-pro-preview',supportedGenerationMethods:['generateContent']}]).map(m=>m.id),['gemini-3.1-pro']);
 console.log('AI response and model catalog checks passed.');

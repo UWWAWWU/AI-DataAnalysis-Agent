@@ -51,13 +51,35 @@ for _dedup in [False,True]:
     frame['__dash_country__']=_text(_series(frame,_spec['countryColumn']))
     frame['__dash_month__']=pd.to_datetime(_series(frame,_spec['dateColumn']),errors='coerce').dt.strftime('%Y-%m').fillna('') if _spec['dateColumn'] else pd.Series('',index=frame.index)
     base=['__dash_country__','__dash_month__']
-    variant={'rows':[[c,d,int(n)] for (c,d),n in frame.groupby(base,sort=False).size().items()],'metrics':[],'charts':[]}
+    variant={'rows':[[c,d,int(n)] for (c,d),n in frame.groupby(base,sort=False).size().items()],'metrics':[],'charts':[],'observations':[],'sampledCharts':[]}
     for i,metric in enumerate(_spec['metrics']):
         part=_metric_frame(frame,metric)
         for key,stats in _aggregate(part,base,metric): variant['metrics'].append(key+[i,stats])
         for j,chart in enumerate(_spec['charts']):
             if chart['metric']!=metric['id']: continue
-            part['__group__']=pd.to_datetime(part[chart['groupBy']],errors='coerce').dt.strftime('%Y-%m').fillna('(kosong)') if chart['time'] else _text(part[chart['groupBy']]).replace('','(kosong)')
+            part=part.copy()
+            if chart.get('view') in ['scatter','boxplot']:
+                part['__x__']=pd.to_numeric(part[chart['xColumn']],errors='coerce')
+                part['__y__']=pd.to_numeric(part[chart['yColumn']],errors='coerce') if chart.get('view')=='scatter' else 0.0
+                valid=part.replace([np.inf,-np.inf],np.nan).dropna(subset=['__x__','__y__'])
+                for _,segment in valid.groupby(base,sort=False):
+                    if len(segment)>1000:
+                        segment=segment.sample(1000,random_state=42)
+                        if j not in variant['sampledCharts']: variant['sampledCharts'].append(j)
+                    for _,row in segment.iterrows():
+                        variant['observations'].append([row[base[0]],row[base[1]],j,str(row[chart['groupBy']]) if pd.notna(row[chart['groupBy']]) else '(missing)',float(row['__x__']),float(row['__y__'])])
+                continue
+            if chart.get('view')=='histogram':
+                assert metric['operation']=='count', 'Histogram requires count metric'
+                source=pd.to_numeric(_src[chart['xColumn']],errors='coerce').replace([np.inf,-np.inf],np.nan).dropna()
+                if source.empty: continue
+                edges=np.histogram_bin_edges(source,bins=chart.get('bins',10))
+                numbers=pd.to_numeric(part[chart['xColumn']],errors='coerce').replace([np.inf,-np.inf],np.nan)
+                part=part.loc[numbers.notna()].copy()
+                positions=np.clip(np.searchsorted(edges,numbers.loc[part.index],side='right')-1,0,len(edges)-2)
+                part['__group__']=[format(edges[k],'.8g')+' — '+format(edges[k+1],'.8g') for k in positions]
+            else:
+                part['__group__']=pd.to_datetime(part[chart['groupBy']],errors='coerce').dt.strftime('%Y-%m').fillna('(kosong)') if chart['time'] else _text(part[chart['groupBy']]).replace('','(kosong)')
             for key,stats in _aggregate(part,base+['__group__'],metric): variant['charts'].append(key[:2]+[j,key[2],stats])
     assert sum(row[2] for row in variant['rows']) == len(frame), 'Dashboard row count mismatch'
     _variants.append(variant)

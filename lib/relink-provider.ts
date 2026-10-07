@@ -8,7 +8,7 @@ export function relinkModels(data:unknown){
  const catalog=(data as {data?:{id?:unknown;enabled?:boolean;available?:boolean;modalities?:{output?:string[]}}[]})?.data;
  if(!Array.isArray(catalog))return [];
  const ids=[...new Set(catalog.filter(m=>m.enabled!==false&&m.available!==false&&(!m.modalities?.output?.length||m.modalities.output.includes('text'))).map(m=>m.id).filter((id):id is string=>typeof id==='string'&&/^[a-zA-Z0-9][a-zA-Z0-9._:/-]{0,150}$/.test(id)&&!/(embed|whisper|tts|image|dall-e|rerank|video)/i.test(id)))];
- return TESTED_MODELS.filter(id=>ids.includes(id)).map(id=>({id:RELINK_PREFIX+id,label:id}));
+ return ids.sort((a,b)=>Number(isTestedModel(b))-Number(isTestedModel(a))||a.localeCompare(b)).filter(id=>!/^gemini-[012](?:[.-]|$)/i.test(id)).map(id=>({id:RELINK_PREFIX+id,label:id}));
 }
 export function relinkError(code:unknown){
  if(code==='model_disabled')return 'This model is not enabled for your provider account. Choose another model or check your provider settings.';

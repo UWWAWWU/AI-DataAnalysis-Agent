@@ -4,7 +4,7 @@ const url=source=>'data:text/javascript;base64,'+Buffer.from(source).toString('b
 const responseModule=url(transpile('lib/ai-response.ts'));
 const {relinkModels,relinkPayload,parseRelinkResponse}=await import(url(transpile('lib/relink-provider.ts').replace("'./ai-response'",JSON.stringify(responseModule))));
 const approved=['deepseek-v4-flash','deepseek-v4-flash-0731','deepseek-v4-flash-vision-exp','deepseek-v4-mod','deepseek-v4-pro-0813','deepseek-v4.1-flash','deepseek-v4.1-mod','gpt-5.6','gpt-5.6-luna'];
-assert.deepEqual(relinkModels({data:[...approved.map(id=>({id})),{id:'auto'},{id:'glm-5.3-flashx'},{id:'kimi-k3'},{id:'glm-5.3'},{id:'mimo-v2.6-pro'},{id:'deepseek-v4-mod'},{id:'gpt-5.6'},{id:'future-new-model'}]}).map(m=>m.id),approved.map(id=>'relink:'+id));
+const catalog=relinkModels({data:[...approved.map(id=>({id})),{id:'glm-5.3'},{id:'kimi-k3'},{id:'gemini-2.5-flash'},{id:'whisper'},{id:'gpt-5.6'}]}).map(m=>m.id);assert.equal(new Set(catalog).size,catalog.length);for(const id of [...approved,'glm-5.3','kimi-k3'])assert.ok(catalog.includes('relink:'+id));assert.ok(!catalog.includes('relink:gemini-2.5-flash'));assert.ok(!catalog.includes('relink:whisper'));
 assert.deepEqual(relinkModels({}),[]);
 assert.deepEqual(relinkModels({data:[{id:'deepseek-v4-flash',enabled:false},{id:'deepseek-v4-flash-0731',available:false},{id:'deepseek-v4-pro-0813',modalities:{output:['audio']}},{id:'gpt-5.6',enabled:true,available:true}]}),[{id:'relink:gpt-5.6',label:'gpt-5.6'}]);
 const payload={systemInstruction:{parts:[{text:'Trusted rules'}]},contents:[{parts:[{text:'Untrusted summary'}]}],generationConfig:{maxOutputTokens:8192,responseJsonSchema:{type:'object',required:['ok']}}};

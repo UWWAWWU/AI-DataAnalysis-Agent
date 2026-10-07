@@ -25,7 +25,8 @@ The project combines language models for analysis planning and explanations, Pyt
 | Feature | Experience |
 | --- | --- |
 | **Automatic exploration** | Upload CSV or XLSX and let the agent identify useful metrics, dimensions, and visualizations. |
-| **Adaptive dashboards** | Explore KPI cards and charts selected for the structure of your dataset. |
+| **Adaptive dashboards** | Explore KPI cards, bar, horizontal bar, line, area, pie, donut, treemap, histogram, scatter and box plots selected for your dataset. |
+| **Chart controls** | Switch compatible chart types, sort categories, choose the displayed category count, expand charts and inspect underlying values. |
 | **Instant filtering** | Change supported filters after the dashboard is prepared; cached aggregates update the view locally. |
 | **AI conversation** | Ask about findings, request another analysis, or change how a chart is presented. |
 | **Data profiling** | Inspect columns, missing values, and identical rows through Data Details. |
@@ -95,7 +96,7 @@ CSV exports reflect the working dataset and cleaning that has actually been appl
 
 > Explain the main findings for the active filters in Indonesian.
 
-Available actions depend on the columns, results, and visualization types supported by the application.
+Available actions depend on the columns, results, and visualization types supported by the application. Histograms use fixed numeric bins; scatter plots preserve paired observations; box plots show quartiles with minimum/maximum whiskers. Scatter and box plots sample up to 1,000 rows per filter partition when necessary, with an explicit notice; KPI calculations continue to use all rows.
 
 ## Technology
 
