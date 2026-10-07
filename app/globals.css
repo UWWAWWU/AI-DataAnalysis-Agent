@@ -130,3 +130,5 @@
 .model-options [data-radix-select-viewport]::-webkit-scrollbar{display:block!important;width:10px}
 .model-options [data-radix-select-viewport]::-webkit-scrollbar-track{background:#f2ece3;border-radius:8px}
 .model-options [data-radix-select-viewport]::-webkit-scrollbar-thumb{background:#b5a38e;border:2px solid #f2ece3;border-radius:8px}
+
+.language-status{display:flex;align-items:center;gap:8px;color:#827a73;font-size:12px;margin:10px 0}

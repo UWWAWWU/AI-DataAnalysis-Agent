@@ -1,7 +1,11 @@
 export type ListedModel={name:string;displayName?:string;supportedGenerationMethods?:string[]};
-// UI ordering follows the user's AI Studio reference. IDs always come from the API catalog.
+// Discover text-analysis models from the provider catalog; never invent IDs.
 export function analysisModels(catalog:ListedModel[]){
- const order=['3.8-flash','3.7-flash','3.5-flash-lite','3.6-flash','3.5-flash','3.1-flash-lite','3.1-pro'];
- const available=catalog.filter(m=>m.supportedGenerationMethods?.includes('generateContent')).map(m=>m.name.replace(/^models\//,''));
- return order.flatMap(name=>{const base='gemini-'+name;const id=available.includes(base)?base:available.filter(id=>new RegExp('^'+base.replaceAll('.','\\.')+'-preview(?:-\\d{2}-\\d{2})?$').test(id)).sort().at(-1);if(!id)return [];const label=name.replace('-flash-lite',' Flash Lite').replace('-flash',' Flash').replace('-pro',' Pro');return [{id,label:label+(id.includes('-preview')?' · Preview':'')}]});
+ const matches=catalog.filter(m=>m.supportedGenerationMethods?.includes('generateContent')).flatMap(m=>{
+  const id=m.name.replace(/^models\//,'');
+  const parts=/^gemini-(\d+)\.(\d+)-(flash-lite|flash|pro)(-preview(?:-\d{2}-\d{2})?)?$/.exec(id);
+  return parts?[{id,major:Number(parts[1]),minor:Number(parts[2]),tier:parts[3],preview:Boolean(parts[4])}]:[];
+ });
+ const seen=new Set<string>();
+ return matches.sort((a,b)=>b.major-a.major||b.minor-a.minor||['flash','pro','flash-lite'].indexOf(a.tier)-['flash','pro','flash-lite'].indexOf(b.tier)||Number(a.preview)-Number(b.preview)||b.id.localeCompare(a.id)).filter(m=>{const family=`${m.major}.${m.minor}-${m.tier}`;if(seen.has(family))return false;seen.add(family);return true}).map(m=>({id:m.id,label:`Gemini ${m.major}.${m.minor} ${m.tier==='flash-lite'?'Flash Lite':m.tier==='flash'?'Flash':'Pro'}${m.preview?' · Preview':''}`}));
 }

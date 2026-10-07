@@ -18,5 +18,5 @@ export async function GET(){
  const results=await Promise.allSettled(tasks.map(t=>t.load()));
  const models=results.flatMap(r=>r.status==='fulfilled'?r.value:[]);
  const unavailable=results.flatMap((r,i)=>r.status==='rejected'?[tasks[i].label]:[]);
- return Response.json({models,unavailable,...(!models.length&&unavailable.length?{error:'Model options are temporarily unavailable.'}:{})},{status:!models.length&&unavailable.length?502:200,headers:{'Cache-Control':'no-store'}});
+ return Response.json({models,defaultModel:models[0]?.id||null,unavailable,...(!models.length&&unavailable.length?{error:'Model options are temporarily unavailable.'}:{})},{status:!models.length&&unavailable.length?502:200,headers:{'Cache-Control':'no-store'}});
 }
