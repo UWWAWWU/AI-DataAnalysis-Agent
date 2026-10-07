@@ -19,7 +19,7 @@ export function placeTiles(requested:Tile[]):Tile[]{
  return placed;
 }
 export function chartRows(chart:Pick<Chart,'view'|'labels'|'sampled'|'title'>,view=chart.view||'ranking',count=chart.labels.length){
- const baseline=['pie','donut','treemap','histogram'].includes(view)?4:5;
+ const baseline=['pie','donut','treemap','histogram'].includes(view)||(view==='bar'&&count<=7)?4:5;
  const content=view==='ranking'?Math.ceil((count*23+190)/92):view==='table'?Math.ceil((Math.min(count,10)*30+220)/92):baseline;
  return Math.max(baseline,content,chart.title.length>65?6:0);
 }
@@ -28,7 +28,7 @@ export function composeDashboard(charts:Chart[],keys:string[],metrics:string[],o
  const width=options.width||1200,tiles:Tile[]=[];let y=0;
  const queue=charts.map((chart,i)=>({chart,key:keys[i]}));
  const compact=(c:Chart)=>['pie','donut','treemap','histogram'].includes(c.view||'')||(c.view==='bar'&&c.labels.length<=7);
- const detailed=(c:Chart)=>c.time||['scatter','table','boxplot'].includes(c.view||'')||c.labels.length>12;
+ const detailed=(c:Chart)=>c.time||['scatter','table','boxplot'].includes(c.view||'')||(c.labels.length>12&&c.view!=='histogram')||(c.view==='histogram'&&c.labels.length>20);
  const row=(items:typeof queue,widths:number[],x=0,start=y,minH=0)=>{
   const h=Math.max(minH,...items.map(({chart,key})=>Math.max(chartRows(chart),chart.position?.h||0,options.minimums?.[key]||0)+(options.editing?1:0)));
   items.forEach(({key},i)=>{tiles.push({key,x,y:start,w:widths[i],h,page:0});x+=widths[i]});return start+h;
@@ -52,11 +52,13 @@ export function composeDashboard(charts:Chart[],keys:string[],metrics:string[],o
   const first=queue[0];
   if(chartRows(first.chart)>9||first.chart.time||first.chart.width==='wide'||(first.chart.position?.w||0)>=8||first.chart.view==='table'){
    const companion=queue.findIndex((item,i)=>i>0&&compact(item.chart)&&!item.chart.time);
-   if(companion>0&&chartRows(first.chart)<=9&&first.chart.view!=='table'&&width>=1000&&first.chart.labels.length<=18){queue.shift();const [other]=queue.splice(companion-1,1);y=row([first,other],[8,4])}
+   if(companion>0&&queue.length<=3&&chartRows(first.chart)<=9&&first.chart.view!=='table'&&width>=1000&&first.chart.labels.length<=18){queue.shift();const [other]=queue.splice(companion-1,1);y=row([first,other],[8,4])}
    else y=row([queue.shift()!],[12]);
   }else{
-   const n=width>=1300&&queue.length>=4&&queue.slice(0,4).every(({chart})=>compact(chart))?4:queue.length>=3&&queue.slice(0,3).every(({chart})=>!detailed(chart))?3:queue.length>=2?2:1;
-   const items=queue.splice(0,n);
+   const small=queue.filter(({chart})=>compact(chart)&&!detailed(chart));
+   const n=width>=1300&&small.length>=4&&compact(first.chart)?4:small.length>=3&&compact(first.chart)?3:queue.length>=2?2:1;
+   const items=n>=3?small.slice(0,n):queue.slice(0,n);
+   for(const item of items)queue.splice(queue.indexOf(item),1);
    let widths=n===4?[3,3,3,3]:n===3?[4,4,4]:n===1?[12]:detailed(items[0].chart)&&!detailed(items[1].chart)?[7,5]:!detailed(items[0].chart)&&detailed(items[1].chart)?[5,7]:[6,6];
    if(n===2&&items[0].chart.position?.w&&items[1].chart.position?.w&&items[0].chart.position.w+items[1].chart.position.w===12)widths=items.map(({chart})=>chart.position!.w);
    y=row(items,widths);
