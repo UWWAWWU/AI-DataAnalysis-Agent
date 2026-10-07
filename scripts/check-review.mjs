@@ -17,9 +17,9 @@ const v=(n)=>({rows:[['UK','2011-01',n]],metrics:[['UK','2011-01',0,[n*6,n,[]]]]
 set(rows,{spec,variants:[v(3),v(2)]});
 const filter={country:'',from:'',to:'',deduplicate:false};
 async function call(action,args={}){await self.onmessage({data:{requestId:1,action,...args}});if(output.error)throw Error(output.error);return output.result}
-const inspected=await call('review',{plan,filter});assert.equal(inspected.matchingRows,2);assert.equal(inspected.pending,false);assert.equal(inspected.canApplyDuplicates,true);assert.equal((await call('filterDashboard',{filter})).rows,3);
+const inspected=await call('review',{plan,filter});assert.equal(inspected.matchingRows,2);assert.equal(inspected.pending,false);assert.equal(inspected.removedRows,0);assert.equal(inspected.proposedRemovals,1);assert.equal(inspected.canApplyDuplicates,true);assert.equal((await call('filterDashboard',{filter})).rows,3);
 const beforeCSV=await call('exportClean');assert.equal(beforeCSV.split('\r\n').length,4);
-await call('reviewStageDuplicates');assert.equal((await call('filterDashboard',{filter})).rows,3);await call('reviewDiscard');
+const proposal=await call('reviewStageDuplicates');assert.equal(proposal.proposedRemovals,1);assert.equal(proposal.removedRows,1);assert.equal((await call('filterDashboard',{filter})).rows,3);await call('reviewDiscard');
 let staged=await call('review',{plan:{...plan,operation:'remove_duplicates'},filter});assert.equal(staged.removedRows,1);assert.equal(staged.draftRows,2);assert.equal(staged.pending,true);
 assert.equal((await call('filterDashboard',{filter})).kpis.Quantity,18);
 assert.equal((await call('review',{plan,filter})).matchingRows,0);
