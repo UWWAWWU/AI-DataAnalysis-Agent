@@ -1,7 +1,7 @@
 export const CUBE_PYTHON=String.raw`
 import hashlib
 _spec=json.loads(__SPEC__)
-_src=pd.read_excel(config['path'], sheet_name=config['sheet'] or 0) if config['isExcel'] else pd.read_csv(config['path'], sep=None, engine='python')
+_src=pd.read_excel(config['path'], sheet_name=config['sheet'] or 0) if config['isExcel'] else pd.read_csv(config['path'], sep=None, engine='python', encoding='utf-8-sig')
 _src.columns=_src.columns.map(str)
 if config.get('baseDeduplicated'): _src=_src.drop_duplicates().copy()
 def _series(frame,col):
