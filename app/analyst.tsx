@@ -78,7 +78,7 @@ export default function Analyst() {
     const worker = useRef<Worker | null>(null), pending = useRef(new Map<number, {
         resolve: (x: any) => void;
         reject: (e: Error) => void;
-    }>()), counter = useRef(0), file = useRef<File | null>(null), fileInput = useRef<HTMLInputElement | null>(null), localRef = useRef<Result | null>(null), sheetRef = useRef('');
+    }>()), counter = useRef(0), file = useRef<File | null>(null), originalFile=useRef<File|null>(null), fileInput = useRef<HTMLInputElement | null>(null), localRef = useRef<Result | null>(null), sheetRef = useRef('');
     const cubeReady = useRef(false), filterRequest = useRef(0);
     const busy = reviewBusy || filterBusy || ['profiling', 'planning', 'executing', 'insight'].includes(stage) || chatBusy;
     useEffect(() => { const w = new Worker('/data-worker.js'); worker.current = w; w.onmessage = e => { let p = pending.current.get(e.data.requestId); if (p) {
@@ -112,7 +112,7 @@ export default function Analyst() {
         return;
     } window.scrollTo({top:0,behavior:'smooth'});setReviewData(null);baseDeduplicated.current=false;setStage('profiling'); setStatus('Checking columns, missing values and duplicate rows.'); setError(''); setResult(null); setPlan(null); setMessages([]); setBrief(null); setPendingInsight(false); setEngine(''); setRepairCount(0); try {
         const r = await call('load', { buffer: await f.arrayBuffer(), sheet: selected });
-        setPreparation(r.preparation);setKept([]);
+        setPreparation(r.preparation);setKept([]);originalFile.current=f;
         file.current = r.preparedCSV?new File(['\ufeff'+r.preparedCSV],f.name.replace(/\.xlsx$/i,'.csv'),{type:'text/csv'}):f;
         setProfile(r.profile);
         setSheets(r.preparedCSV?[]:r.sheets);
@@ -226,7 +226,7 @@ export default function Analyst() {
     async function stageCleaning(f:Finding,treatment:'remove'|'median'|'mean'){setReviewBusy(true);setError('');try{setReviewData(await call('cleaningStage',{id:f.id,treatment}));setTab('review')}catch(e){setError((e as Error).message)}finally{setReviewBusy(false)}}
     async function linkedCategory(column:string,value:string){if(busy)return;try{await apply({...filter,country:filter.country===value?'':value})}catch(e){setError((e as Error).message)}}
     async function refreshPreparation(){setPreparation(await call('preparation'));setKept([])}
-    async function downloadOriginal(){download('\ufeff'+await call('exportOriginal'),reportFilename(source,'csv').replace('report_','original_'),'text/csv')}
+    async function downloadOriginal(){if(!originalFile.current)return;const url=URL.createObjectURL(originalFile.current),a=document.createElement('a');a.href=url;a.download=originalFile.current.name;a.click();setTimeout(()=>URL.revokeObjectURL(url),500)}
     async function reviewPage(page:number){setReviewBusy(true);try{setReviewData(await call('reviewPage',{page}))}catch(e){setError((e as Error).message)}finally{setReviewBusy(false)}}
     async function discardReview(){setReviewBusy(true);try{await call('reviewDiscard');setReviewData(null)}catch(e){setError((e as Error).message)}finally{setReviewBusy(false)}}
     async function applyReview(){if((!reviewData?.pending&&!reviewData?.canApplyDuplicates)||busy||!profile)return;setReviewBusy(true);setError('');try{const ready=reviewData.canApplyDuplicates?await call('reviewStageDuplicates'):reviewData;setReviewData(ready);if(ready.dedupOnly&&cubeReady.current){const nextFilter={...filter,deduplicate:true};const applied=await call('reviewApplyDedup',{filter:nextFilter});baseDeduplicated.current=true;setProfile(applied.profile);setResult(applied.result);setFilter(nextFilter);setReviewData(null);await refreshPreparation();setBrief(null);setTab('dashboard');setStatus('Changes applied to the dashboard.');return;}const prepared=await call('reviewPrepare');const previousFile=file.current,previousSheet=sheetRef.current,previousBase=baseDeduplicated.current;file.current=new File(['\ufeff'+prepared.csv],'reviewed-data.csv',{type:'text/csv'});sheetRef.current='';baseDeduplicated.current=false;let success=false;try{success=await execute(plan,prepared.profile,filter)}finally{if(!success){file.current=previousFile;sheetRef.current=previousSheet;baseDeduplicated.current=previousBase}}if(success){await call('reviewCommit');await refreshPreparation();setReviewData(null);setBrief(null);setSheet('');setSheets([]);setStatus('Changes applied to the dashboard.')}}catch(e){setError((e as Error).message)}finally{setReviewBusy(false)}}

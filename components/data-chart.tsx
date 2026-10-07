@@ -1,6 +1,6 @@
 'use client';
 import {useMemo,useState} from 'react';
-import {ResponsiveContainer,BarChart,Bar,LineChart,Line,AreaChart,Area,PieChart,Pie,Cell,Treemap,ScatterChart,Scatter,XAxis,YAxis,CartesianGrid,Tooltip,Legend,LabelList,RadarChart,Radar,PolarGrid,PolarAngleAxis,PolarRadiusAxis} from 'recharts';
+import {ResponsiveContainer,BarChart,Bar,LineChart,Line,AreaChart,Area,PieChart,Pie,Cell,Treemap,ScatterChart,Scatter,XAxis,YAxis,CartesianGrid,Tooltip,Legend,LabelList} from 'recharts';
 import {chartDisplay,categoryColor} from '@/lib/chart-display';
 import type {Chart} from '@/lib/analysis';
 import {useLanguage} from '@/lib/language';
@@ -12,7 +12,7 @@ export function DataChart({chart,index,canvas=false,onCategory}:{chart:Chart;ind
  const display=useMemo(()=>chartDisplay(chart,view),[chart,view]);const options=display.options;
  const ordered=view==='histogram'?display.data:order==='original'?display.data:[...display.data].sort(order==='ascending'?(a,b)=>a.value-b.value:(a,b)=>b.value-a.value);
  const data=ordered.slice(0,view==='histogram'?undefined:limit||undefined);
- const categoryControls=!chart.time&&!['scatter','histogram'].includes(view==='table'?original:view);
+ const categoryControls=(view==='boxplot'?display.boxes.length>1:display.data.length>1)&&!chart.time&&!['scatter','histogram'].includes(view==='table'?original:view);
  const showSampling=chart.sampled&&!(original==='histogram'&&view!=='boxplot');
  const boxData=(order==='original'?display.boxes:[...display.boxes].sort(order==='ascending'?(a,b)=>a.median-b.median:(a,b)=>b.median-a.median)).slice(0,limit||undefined);
  const tableKind=view==='table'?original:view;
