@@ -1,8 +1,7 @@
 import {AIResponseError,parseAIResponse} from './ai-response';
 export const RELINK_PREFIX='relink:';
-// Passed plan, presentation and grounded insight tests on 2026-10-05;
-// deepseek-v4-mod and gpt-5.6-luna passed retests on 2026-10-06.
-export const TESTED_MODELS=['deepseek-v4-flash','deepseek-v4-flash-0731','deepseek-v4-flash-vision-exp','deepseek-v4-mod','deepseek-v4-pro-0813','deepseek-v4.1-flash','deepseek-v4.1-mod','gpt-5.6','gpt-5.6-luna'] as const;
+// Account-accessible models verified through the deployed agent on 2026-10-07.
+export const TESTED_MODELS=['deepseek-v4-flash','deepseek-v4-flash-0731','deepseek-v4-flash-vision-exp','deepseek-v4-mod','deepseek-v4-pro-0813','deepseek-v4.1-flash','deepseek-v4.1-mod','gpt-5.6','gpt-5.6-luna','auto','glm-5.3','glm-5.3-mod','glm-5.3-flashx','kimi-k3','kimi-k3-mod'] as const;
 export const isTestedModel=(id:string)=>TESTED_MODELS.some(model=>model===id);
 export function relinkModels(data:unknown){
  const catalog=(data as {data?:{id?:unknown;enabled?:boolean;available?:boolean;modalities?:{output?:string[]}}[]})?.data;

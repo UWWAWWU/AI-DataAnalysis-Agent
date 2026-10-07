@@ -1,10 +1,11 @@
 export const runtime='nodejs';
 export const maxDuration=60;
 import {analysisModels,type ListedModel} from '@/lib/model-options';
-import {relinkModels} from '@/lib/relink-provider';
+import {relinkModels,isTestedModel} from '@/lib/relink-provider';
 const env=process.env;
 
-export async function GET(){
+export async function GET(request:Request){
+ const catalogMode=new URL(request.url).searchParams.get("catalog")==="all";
 
  const runtime=env as Record<string,unknown>,tasks:{label:string;load:()=>Promise<{id:string;label:string}[]>}[]=[];
  if(runtime.GEMINI_API_KEY)tasks.push({label:'Google',load:async()=>{
@@ -13,7 +14,7 @@ export async function GET(){
  }});
  if(runtime.RELINK_API_KEY)tasks.push({label:'API',load:async()=>{
   const response=await fetch(String(runtime.RELINK_BASE_URL||'https://api.relink-gateway.biz.id/v1').replace(/\/$/,'')+'/models',{headers:{Authorization:'Bearer '+String(runtime.RELINK_API_KEY)},signal:AbortSignal.timeout(15000)});
-  if(!response.ok)throw Error();const models=relinkModels(await response.json());if(!models.length)throw Error();return models;
+  if(!response.ok)throw Error();const models=relinkModels(await response.json());if(!models.length)throw Error();return catalogMode?models:models.filter(m=>isTestedModel(m.id.replace(/^relink:/,"")));
  }});
  const results=await Promise.allSettled(tasks.map(t=>t.load()));
  const models=results.flatMap(r=>r.status==='fulfilled'?r.value:[]);

@@ -4,7 +4,7 @@ const base=process.argv[2]||'https://aiagent.wawutriambodo.my.id';
 const rows=[{total_bill:10,tip:1,day:'Sun',time:'Dinner',size:2},{total_bill:20,tip:3,day:'Sat',time:'Dinner',size:3},{total_bill:30,tip:5,day:'Sun',time:'Lunch',size:4},{total_bill:40,tip:6,day:'Fri',time:'Lunch',size:5}];
 const csv='total_bill,tip,day,time,size\n'+rows.map(r=>Object.values(r).join(',')).join('\n');const p=profile(rows);
 async function request(path,body,timeout=130000){const started=Date.now(),r=await fetch(base+path,{method:body?'POST':'GET',headers:body?{'Content-Type':'application/json'}:undefined,body:body?JSON.stringify(body):undefined,signal:AbortSignal.timeout(timeout)});const data=await r.json();if(!r.ok)throw Object.assign(Error(data.validationReason||data.error||'Request failed'),{code:data.code||data.executionError?.name||'HTTP_'+r.status});return {data,ms:Date.now()-started};}
-const catalog=(await request('/api/models')).data.models.filter(m=>m.id.startsWith('relink:')&&(!process.env.MODEL_FILTER||m.id.includes(process.env.MODEL_FILTER)));
+const catalog=(await request('/api/models?catalog=all')).data.models.filter(m=>m.id.startsWith('relink:')&&(!process.env.MODEL_FILTER||m.id.includes(process.env.MODEL_FILTER)));
 assert.ok(catalog.length,'No matching active gateway models.');
 console.log('Testing '+catalog.length+' gateway catalog models.');const results=[];let cursor=0;
 async function check(model){const entry={model:model.id,checks:[]};let ticket;

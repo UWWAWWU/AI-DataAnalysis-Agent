@@ -1,0 +1,390 @@
+{
+  "date": "2026-10-07T13:11:13.045Z",
+  "base": "https://aiagent.wawutriambodo.my.id",
+  "fixture": "4 synthetic tips-like rows; not the real Tips dataset",
+  "results": [
+    {
+      "model": "relink:deepseek-v4-flash-0731",
+      "checks": [
+        {
+          "stage": "plan",
+          "passed": true,
+          "ms": 31588
+        },
+        {
+          "stage": "python",
+          "passed": true,
+          "ms": 2754
+        },
+        {
+          "stage": "insight",
+          "passed": true,
+          "ms": 6900
+        }
+      ],
+      "passed": true
+    },
+    {
+      "model": "relink:deepseek-v4-flash-vision-exp",
+      "checks": [
+        {
+          "stage": "plan",
+          "passed": true,
+          "ms": 18513
+        },
+        {
+          "stage": "python",
+          "passed": true,
+          "ms": 1354
+        },
+        {
+          "stage": "insight",
+          "passed": true,
+          "ms": 6522
+        },
+        {
+          "stage": "presentation",
+          "passed": true,
+          "ms": 10102
+        }
+      ],
+      "passed": true
+    },
+    {
+      "model": "relink:deepseek-v4-flash",
+      "checks": [
+        {
+          "stage": "plan",
+          "passed": true,
+          "ms": 16990
+        },
+        {
+          "stage": "python",
+          "passed": true,
+          "ms": 15442
+        },
+        {
+          "stage": "insight",
+          "passed": true,
+          "ms": 10999
+        },
+        {
+          "stage": "presentation",
+          "passed": true,
+          "ms": 8130
+        }
+      ],
+      "passed": true
+    },
+    {
+      "model": "relink:deepseek-v4-mod",
+      "checks": [
+        {
+          "stage": "plan",
+          "passed": true,
+          "ms": 14671
+        },
+        {
+          "stage": "python",
+          "passed": true,
+          "ms": 5560
+        },
+        {
+          "stage": "insight",
+          "passed": true,
+          "ms": 9460
+        },
+        {
+          "stage": "presentation",
+          "passed": true,
+          "ms": 8175
+        }
+      ],
+      "passed": true
+    },
+    {
+      "model": "relink:deepseek-v4-pro-0813",
+      "checks": [
+        {
+          "stage": "plan",
+          "passed": true,
+          "ms": 27172
+        },
+        {
+          "stage": "python",
+          "passed": true,
+          "ms": 13794
+        },
+        {
+          "stage": "insight",
+          "passed": true,
+          "ms": 17443
+        }
+      ],
+      "passed": true
+    },
+    {
+      "model": "relink:deepseek-v4.1-flash",
+      "checks": [
+        {
+          "stage": "plan",
+          "passed": true,
+          "ms": 32703
+        },
+        {
+          "stage": "python",
+          "passed": true,
+          "ms": 11058
+        },
+        {
+          "stage": "insight",
+          "passed": true,
+          "ms": 15209
+        },
+        {
+          "stage": "presentation",
+          "passed": true,
+          "ms": 10377
+        }
+      ],
+      "passed": true
+    },
+    {
+      "model": "relink:deepseek-v4.1-mod",
+      "checks": [
+        {
+          "stage": "plan",
+          "passed": true,
+          "ms": 18185
+        },
+        {
+          "stage": "python",
+          "passed": true,
+          "ms": 8883
+        },
+        {
+          "stage": "insight",
+          "passed": true,
+          "ms": 7638
+        },
+        {
+          "stage": "presentation",
+          "passed": true,
+          "ms": 13658
+        }
+      ],
+      "passed": true
+    },
+    {
+      "model": "relink:gpt-5.6",
+      "checks": [
+        {
+          "stage": "plan",
+          "passed": true,
+          "ms": 66569
+        },
+        {
+          "stage": "python",
+          "passed": true,
+          "ms": 5784
+        },
+        {
+          "stage": "insight",
+          "passed": true,
+          "ms": 27592
+        }
+      ],
+      "passed": true
+    },
+    {
+      "model": "relink:auto",
+      "checks": [
+        {
+          "stage": "plan",
+          "passed": true,
+          "ms": 20289
+        },
+        {
+          "stage": "python",
+          "passed": true,
+          "ms": 5073
+        },
+        {
+          "stage": "insight",
+          "passed": true,
+          "ms": 15256
+        },
+        {
+          "stage": "presentation",
+          "passed": true,
+          "ms": 13399
+        }
+      ],
+      "passed": true
+    },
+    {
+      "model": "relink:gpt-5.6-luna",
+      "checks": [
+        {
+          "stage": "plan",
+          "passed": true,
+          "ms": 56674
+        },
+        {
+          "stage": "python",
+          "passed": true,
+          "ms": 10258
+        },
+        {
+          "stage": "insight",
+          "passed": true,
+          "ms": 13453
+        },
+        {
+          "stage": "presentation",
+          "passed": true,
+          "ms": 31651
+        }
+      ],
+      "passed": true
+    },
+    {
+      "model": "relink:glm-5.3-flash",
+      "checks": [],
+      "passed": false,
+      "failure": {
+        "code": "AI_TIMEOUT",
+        "message": "The AI request timed out. Please retry."
+      }
+    },
+    {
+      "model": "relink:glm-5.3-flash-mod",
+      "checks": [],
+      "passed": false,
+      "failure": {
+        "code": "AI_TIMEOUT",
+        "message": "The AI request timed out. Please retry."
+      }
+    },
+    {
+      "model": "relink:glm-5.3",
+      "checks": [
+        {
+          "stage": "plan",
+          "passed": true,
+          "ms": 34070
+        },
+        {
+          "stage": "python",
+          "passed": true,
+          "ms": 12610
+        },
+        {
+          "stage": "insight",
+          "passed": true,
+          "ms": 27287
+        },
+        {
+          "stage": "presentation",
+          "passed": true,
+          "ms": 23863
+        }
+      ],
+      "passed": true
+    },
+    {
+      "model": "relink:glm-5.3-mod",
+      "checks": [
+        {
+          "stage": "plan",
+          "passed": true,
+          "ms": 42094
+        },
+        {
+          "stage": "python",
+          "passed": true,
+          "ms": 8363
+        },
+        {
+          "stage": "insight",
+          "passed": true,
+          "ms": 20543
+        },
+        {
+          "stage": "presentation",
+          "passed": true,
+          "ms": 10217
+        }
+      ],
+      "passed": true
+    },
+    {
+      "model": "relink:glm-5.3-flashx",
+      "checks": [
+        {
+          "stage": "plan",
+          "passed": true,
+          "ms": 58440
+        },
+        {
+          "stage": "python",
+          "passed": true,
+          "ms": 12677
+        },
+        {
+          "stage": "insight",
+          "passed": true,
+          "ms": 39368
+        },
+        {
+          "stage": "presentation",
+          "passed": true,
+          "ms": 11131
+        }
+      ],
+      "passed": true
+    },
+    {
+      "model": "relink:kimi-k3",
+      "checks": [
+        {
+          "stage": "plan",
+          "passed": true,
+          "ms": 56097
+        },
+        {
+          "stage": "python",
+          "passed": true,
+          "ms": 6458
+        },
+        {
+          "stage": "insight",
+          "passed": true,
+          "ms": 31254
+        }
+      ],
+      "passed": true
+    },
+    {
+      "model": "relink:kimi-k3-mod",
+      "checks": [
+        {
+          "stage": "plan",
+          "passed": true,
+          "ms": 57081
+        },
+        {
+          "stage": "python",
+          "passed": true,
+          "ms": 13331
+        },
+        {
+          "stage": "insight",
+          "passed": true,
+          "ms": 36146
+        }
+      ],
+      "passed": true
+    }
+  ]
+}

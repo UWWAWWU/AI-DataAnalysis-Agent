@@ -126,3 +126,9 @@ AI explanations help interpret calculated results; they do not establish causati
 AI Data Analysis Agent · An interactive workspace for data analysis
 
 </div>
+
+## Model verification
+
+The Settings dropdown shows account-accessible Relink models that passed the deployed agent checks. The full provider catalog remains discoverable through `/api/models?catalog=all`; catalog availability alone does not establish agent compatibility. On 2026-10-07, 15 of 17 account catalog models passed plan generation, isolated Python calculation and grounded insight checks with a four-row synthetic fixture. `glm-5.3-flash` and `glm-5.3-flash-mod` timed out and are excluded from Settings. This is a functional snapshot, not a reliability guarantee or a test of every provider-advertised model. See `scripts/active-model-results.json` for per-stage results.
+
+Scatter coordinates remain in the browser dashboard and are excluded from model context. Box plots show quartiles and minimum/maximum whiskers; large raw-data charts disclose deterministic sampling. Histogram charts retain all requested bins, including empty bins.
