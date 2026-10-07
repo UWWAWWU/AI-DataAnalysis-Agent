@@ -12,3 +12,5 @@ assert.equal(analysisModels([model('gemini-3.1-flash-lite')])[0].label,'Gemini 3
 const app=fs.readFileSync('app/analyst.tsx','utf8');assert.match(app,/lt\(m.text\)/);assert.match(app,/title:lt\(c.title\)/);assert.match(app,/lt\(name\)/);assert.match(app,/insightFacts\(null, localizedResult,locale\)/);
 const api=fs.readFileSync('app/api/ai/route.ts','utf8');assert.doesNotMatch(api,/replyLanguage\(question/);assert.match(api,/body.language==='id'\?'id':'en'/);
 console.log('Localization preserves numbers, timestamps, columns and code; model ordering and display language checks passed.');
+
+assert.equal(analysisModels([{name:'models/gemini-2.5-flash',supportedGenerationMethods:['generateContent']}]).length,0);
