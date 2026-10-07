@@ -1,0 +1,19 @@
+import type {Row} from './analysis';
+export type Finding={id:string;kind:'duplicates'|'missing'|'outliers';column?:string;count:number;low?:number;high?:number;preview:{row:number;value:unknown}[]};
+export function prepareData(source:Row[]){
+ const rows=source.map(row=>({...row})),log:string[]=[];let spaces=0,converted=0;
+ const columns=Object.keys(rows[0]||{});
+ for(const col of columns){for(const row of rows)if(typeof row[col]==='string'){const value=(row[col] as string).trim();if(value!==row[col]){row[col]=value;spaces++}}
+ const values=rows.map(r=>r[col]).filter(v=>v!==null&&v!==undefined&&v!=='');
+ // Preserve codes, leading zeros, ambiguous dates and localized number formats.
+ if(values.length&&!/(id|code|phone|zip|postal|invoice)/i.test(col)&&values.every(v=>typeof v==='number'||typeof v==='string'&&/^[+-]?(?:0|[1-9]\d*)(?:\.\d+)?$/.test(v)&&Number.isFinite(Number(v))))for(const row of rows)if(typeof row[col]==='string'&&row[col]!==''){row[col]=Number(row[col]);converted++}
+ }
+ if(spaces)log.push(`Trimmed surrounding whitespace in ${spaces} cells.`);if(converted)log.push(`Converted ${converted} unambiguous numeric cells; identifiers and leading-zero codes were preserved.`);
+ return {rows,log,changed:spaces+converted>0,findings:inspectData(rows)};
+}
+export function inspectData(rows:Row[]):Finding[]{const findings:Finding[]=[],cols=Object.keys(rows[0]||{}),seen=new Set<string>(),duplicates:Finding['preview']=[];let extras=0;
+ rows.forEach((r,i)=>{const key=JSON.stringify(cols.map(c=>r[c]??null));if(seen.has(key)){extras++;if(duplicates.length<8)duplicates.push({row:i+2,value:r})}else seen.add(key)});if(extras)findings.push({id:'duplicates',kind:'duplicates',count:extras,preview:duplicates});
+ for(const column of cols){const missing:Finding['preview']=[];let count=0;rows.forEach((r,i)=>{if(r[column]==null||r[column]===''){count++;if(missing.length<8)missing.push({row:i+2,value:r[column]})}});if(count)findings.push({id:`missing:${column}`,kind:'missing',column,count,preview:missing});
+ const nums=rows.map(r=>r[column]).filter((v):v is number=>typeof v==='number'&&Number.isFinite(v)).sort((a,b)=>a-b);if(nums.length<8)continue;const q=(p:number)=>{const n=(nums.length-1)*p,k=Math.floor(n);return nums[k]+(nums[Math.ceil(n)]-nums[k])*(n-k)};const iqr=q(.75)-q(.25);if(!iqr)continue;const low=q(.25)-1.5*iqr,high=q(.75)+1.5*iqr;const preview:Finding['preview']=[];let unusual=0;rows.forEach((r,i)=>{const v=r[column];if(typeof v==='number'&&(v<low||v>high)){unusual++;if(preview.length<8)preview.push({row:i+2,value:v})}});if(unusual)findings.push({id:`outliers:${column}`,kind:'outliers',column,count:unusual,low,high,preview});
+ }return findings}
+export function applyFinding(rows:Row[],finding:Finding,action:'remove'|'median'|'mean'):Row[]{if(finding.kind==='duplicates'){const seen=new Set<string>(),cols=Object.keys(rows[0]||{});return rows.filter(r=>{const key=JSON.stringify(cols.map(c=>r[c]??null));if(seen.has(key))return false;seen.add(key);return true})}const col=finding.column!;if(action==='remove')return rows.filter(r=>finding.kind==='missing'?r[col]!=null&&r[col]!=='':!(typeof r[col]==='number'&&((r[col] as number)<finding.low!||(r[col] as number)>finding.high!)));if(finding.kind!=='missing')throw Error('Imputation only applies to missing values.');const nums=rows.map(r=>r[col]).filter((v):v is number=>typeof v==='number'&&Number.isFinite(v)).sort((a,b)=>a-b);if(!nums.length)throw Error('This column has no numeric values to use for imputation.');const n=nums.length,value=action==='mean'?nums.reduce((s,v)=>s+v,0)/n:n%2?nums[(n-1)/2]:(nums[n/2-1]+nums[n/2])/2;return rows.map(r=>r[col]==null||r[col]===''?{...r,[col]:value}:r)}
