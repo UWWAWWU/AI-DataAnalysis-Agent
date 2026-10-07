@@ -2,6 +2,14 @@ export function validateSpec(v, columns) {
     const s = v;
     if (!s || typeof s !== 'object' || typeof s.countryColumn !== 'string' || typeof s.dateColumn !== 'string' || !Array.isArray(s.metrics) || !s.metrics.length || s.metrics.length > 8 || !Array.isArray(s.kpis) || s.kpis.length > 8 || !Array.isArray(s.charts) || s.charts.length > 6)
         throw Error('Spesifikasi dashboard tidak valid.');
+    for (const chart of s.charts)
+        for (const key of ['xColumn', 'yColumn', 'bins', 'view', 'width'])
+            if (chart[key] === null)
+                delete chart[key];
+    for (const kpi of s.kpis)
+        for (const key of ['metric', 'numerator', 'denominator', 'denominatorExtra', 'scale'])
+            if (kpi[key] === null)
+                delete kpi[key];
     if (s.layout && !['kpi-first', 'charts-first'].includes(s.layout))
         throw Error('Invalid dashboard layout.');
     const col = (x) => typeof x === 'string' && (!columns || columns.includes(x));
