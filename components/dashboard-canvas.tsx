@@ -11,9 +11,9 @@ export function DashboardCanvas({charts,dataset,onCategory,filterColumn,kpis={},
  const variedAI= new Set(charts.map(c=>`${c.position?.w}:${c.position?.h}`)).size>1;
  const tiles=placeTiles([...metricTiles,...charts.map((c,i)=>{
  const explicit=variedAI&&c.position&&c.position.page===0?{key:keys[i],...c.position}:null;
- const compact=['pie','donut','treemap','histogram'].includes(c.view||'');
+ const compact=['pie','donut','treemap','histogram'].includes(c.view||'')||(c.view==='table'&&c.labels.length<=8);
  const wide=c.time||c.width==='wide'||['line','area','ranking','table','scatter'].includes(c.view||'');
- return saved.find(t=>t.key===keys[i])||explicit||{key:keys[i],x:0,y:Math.ceil(metricTiles.length/4),w:compact?4:wide?8:6,h:c.view==='table'?5:compact?3:4,page:0};
+ return saved.find(t=>t.key===keys[i])||explicit||{key:keys[i],x:0,y:Math.ceil(metricTiles.length/4),w:compact?4:wide?8:6,h:c.view==='table'?(compact?4:5):compact?3:4,page:0};
  })]);
  const canvasRows=Math.max(1,...tiles.map(t=>t.y+t.h));
  function update(tile:Tile){setSaved(placeTiles([tile,...tiles.filter(t=>t.key!==tile.key)]))}
