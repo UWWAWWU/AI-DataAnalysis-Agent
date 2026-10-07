@@ -1,8 +1,7 @@
 import type {Chart} from './analysis';
 export const PLOT_TYPES=['bar','ranking','line','area','table','pie','donut','treemap','histogram','scatter','boxplot'] as const;
 export type PlotType=typeof PLOT_TYPES[number];
-export const PALETTE=['#3579b1','#d56b44','#8b66ba','#259d98','#d29b32','#c66195','#6f9b46','#596ec2','#ad704b','#4b9daf','#bd5d64','#8a8b45'];
-export function categoryColor(name:string){let hash=0;for(const c of name.normalize('NFKC').trim().toLowerCase())hash=(hash*31+c.charCodeAt(0))>>>0;return PALETTE[hash%PALETTE.length];}
+export function categoryColor(name:string){let hash=2166136261;for(const c of name.normalize('NFKC').trim().toLowerCase())hash=Math.imul(hash^c.charCodeAt(0),16777619)>>>0;return `hsl(${hash%360}, 52%, 46%)`;}
 export type SeriesDatum={name:string;value:number};
 export type Box={name:string;low:number;q1:number;median:number;q3:number;high:number};
 export function histogram(numbers:number[],bins=10):SeriesDatum[]{if(!numbers.length)return [];let low=Infinity,high=-Infinity;for(const n of numbers){low=Math.min(low,n);high=Math.max(high,n)}if(low===high){low-=.5;high+=.5}const step=(high-low)/bins;const data=Array.from({length:bins},(_,i)=>({name:`${Number((low+step*i).toPrecision(5))} — ${Number((low+step*(i+1)).toPrecision(5))}`,value:0}));for(const n of numbers)data[Math.min(bins-1,Math.max(0,Math.floor((n-low)/step)))].value++;return data;}

@@ -10,3 +10,5 @@ assert.equal(histogram([5,5,5],4).reduce((s,d)=>s+d.value,0),3);assert.equal(cat
 console.log('Adaptive chart display checks passed: AI default, 11 paired-data views, group means/counts, histogram totals, quartiles, negative values, stable colors and immutable inputs.');
 
 const many={...scatter,points:Array.from({length:30},(_,i)=>({x:i,y:i*2,group:String(i)}))};assert.equal(chartDisplay(many,"bar").data.length,10);assert.equal(chartDisplay({...scatter,view:"histogram",labels:["0 — 10","10 — 20"],values:[1,2]},"bar").data[1].value,2);
+
+assert.notEqual(categoryColor("Lunch"),categoryColor("Dinner"));
