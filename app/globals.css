@@ -150,3 +150,5 @@
 .cleaning-inline-preview .data-review{padding:16px;box-shadow:none;margin:0}
 .cleaning-inline-preview .review-apply{position:sticky;bottom:0;background:#fff;padding:12px;z-index:2}
 @media(max-width:760px){.dashboard-canvas .canvas-metric{min-height:90px}.dashboard-canvas .canvas-tile:not(.canvas-metric){min-height:350px}}
+
+.cleaning-review button{color:#342f27}.cleaning-review .review-apply button:last-child{background:#9c5237;color:#fff;border-color:#9c5237}
