@@ -20,6 +20,15 @@ export function validateSpec(v, columns) {
         throw Error('Invalid dashboard layout.');
     if (s.layout && !['kpi-first', 'charts-first'].includes(s.layout))
         throw Error('Invalid dashboard layout.');
+    if (s.categoryLabels) {
+        if (typeof s.categoryLabels !== 'object' || Array.isArray(s.categoryLabels) || Object.keys(s.categoryLabels).length > 200)
+            throw Error('Invalid category dictionaries.');
+        for (const [column, dictionary] of Object.entries(s.categoryLabels)) {
+            const bilingual = (label) => Boolean(label && typeof label === 'object' && ['en', 'id'].every(lang => typeof label[lang] === 'string' && String(label[lang]).length <= 200));
+            if (columns && !columns.includes(column) || !dictionary || !bilingual(dictionary.label) || typeof dictionary.source !== 'string' || dictionary.source.length > 500 || !dictionary.values || typeof dictionary.values !== 'object' || Array.isArray(dictionary.values) || Object.keys(dictionary.values).length > 100 || !Object.values(dictionary.values).every(bilingual) || dictionary.order && (!Array.isArray(dictionary.order) || !dictionary.order.every(value => typeof value === 'string' && value.length <= 200)))
+                throw Error('Invalid category dictionary.');
+        }
+    }
     const col = (x) => typeof x === 'string' && (!columns || columns.includes(x));
     for (const x of [s.countryColumn, s.dateColumn])
         if (x && !col(x))
@@ -90,7 +99,7 @@ export function reduceCube(cube, f) {
                 const row = tableGroups.get(label) || new Map();
                 row.set(id, merge(row.get(id) || [0, 0, []], a));
                 tableGroups.set(label, row);
-            } const tableHeaders = tableIds ? [c.groupBy, ...tableIds.map(id => { const metric = s.metrics.find(m => m.id === id); return `${metric.operation} ${metric.columns.join(' × ') || 'rows'}`; })] : undefined; const tableRows = tableIds ? [...tableGroups].slice(0, c.limit).map(([label, row]) => [label, ...tableIds.map(id => value(s.metrics.find(m => m.id === id), row.get(id) || [0, 0, []]))]) : undefined; return { tableHeaders, tableRows, metricLabel: `${m.operation} ${m.columns.join(' × ') || 'rows'}`, position: c.position, id: JSON.stringify([c.title, c.metric, c.groupBy]), displayView: c.displayView, points: ['scatter', 'boxplot', 'histogram'].includes(c.view || '') ? observations.map(o => ({ x: o[4], ...(c.view === 'scatter' ? { y: o[5] } : {}), group: o[3] })) : undefined, boxes, sampled: v.sampledCharts?.includes(i), groupColumn: c.groupBy, xColumn: c.xColumn, yColumn: c.yColumn, title: c.title, description: c.description, time: c.time, view: c.view || (c.time ? 'area' : 'ranking'), width: c.width || 'standard', labels: entries.map(x => x[0]), values: entries.map(x => x[1]) }; });
+            } const tableHeaders = tableIds ? [c.groupBy, ...tableIds.map(id => { const metric = s.metrics.find(m => m.id === id); return `${metric.operation} ${metric.columns.join(' × ') || 'rows'}`; })] : undefined; const tableRows = tableIds ? [...tableGroups].slice(0, c.limit).map(([label, row]) => [label, ...tableIds.map(id => value(s.metrics.find(m => m.id === id), row.get(id) || [0, 0, []]))]) : undefined; return { tableHeaders, tableRows, metricLabel: `${m.operation} ${m.columns.join(' × ') || 'rows'}`, position: c.position, id: JSON.stringify([c.title, c.metric, c.groupBy]), displayView: c.displayView, points: ['scatter', 'boxplot', 'histogram'].includes(c.view || '') ? observations.map(o => ({ x: o[4], ...(c.view === 'scatter' ? { y: o[5] } : {}), group: o[3] })) : undefined, boxes, sampled: v.sampledCharts?.includes(i), groupColumn: c.groupBy, xColumn: c.xColumn, yColumn: c.yColumn, title: c.title, description: c.description, categoryLabels: s.categoryLabels?.[c.groupBy], groupLabel: c.time ? { en: 'Month', id: 'Bulan' } : s.categoryLabels?.[c.groupBy]?.label, measureLabel: s.categoryLabels?.[m.columns[0]]?.label, aggregation: m.operation, measureColumns: m.columns, time: c.time, view: c.view || (c.time ? 'area' : 'ranking'), width: c.width || 'standard', labels: entries.map(x => x[0]), values: entries.map(x => x[1]) }; });
     const rows = v.rows.reduce((n, [country, date, count]) => n + (match(country, date) ? count : 0), 0);
     return { rows, kpis, charts, definitions: describeSpec(s), cleaning_log: [f.deduplicate ? 'Exact duplicates across every column are excluded; the first row is retained. Timestamps are compared without rounding.' : 'Exact duplicate rows are retained. The source file is unchanged.'] };
 }
