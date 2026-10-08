@@ -51,13 +51,17 @@ for _dedup in [False,True]:
     frame['__dash_country__']=_text(_series(frame,_spec['countryColumn']))
     frame['__dash_month__']=pd.to_datetime(_series(frame,_spec['dateColumn']),errors='coerce').dt.strftime('%Y-%m').fillna('') if _spec['dateColumn'] else pd.Series('',index=frame.index)
     base=['__dash_country__','__dash_month__']
-    variant={'rows':[[c,d,int(n)] for (c,d),n in frame.groupby(base,sort=False).size().items()],'metrics':[],'charts':[],'observations':[],'sampledCharts':[],'histogramLabels':{}}
+    variant={'rows':[[c,d,int(n)] for (c,d),n in frame.groupby(base,sort=False).size().items()],'metrics':[],'charts':[],'observations':[],'sampledCharts':[],'histogramLabels':{},'tableMetrics':[]}
     for i,metric in enumerate(_spec['metrics']):
         part=_metric_frame(frame,metric)
         for key,stats in _aggregate(part,base,metric): variant['metrics'].append(key+[i,stats])
         for j,chart in enumerate(_spec['charts']):
-            if chart['metric']!=metric['id']: continue
+            if chart['metric']!=metric['id'] and metric['id'] not in chart.get('tableMetrics',[]): continue
             part=part.copy()
+            if chart.get('tableMetrics'):
+                part['__group__']=_text(part[chart['groupBy']]).replace('','(missing)')
+                for key,stats in _aggregate(part,base+['__group__'],metric): variant['tableMetrics'].append(key[:2]+[j,metric['id'],key[2],stats])
+                if chart['metric']!=metric['id']: continue
             if chart.get('view') in ['scatter','boxplot']:
                 part['__x__']=pd.to_numeric(part[chart['xColumn']],errors='coerce')
                 part['__y__']=pd.to_numeric(part[chart['yColumn']],errors='coerce') if chart.get('view')=='scatter' else 0.0

@@ -1,7 +1,7 @@
 export function validateSpec(v, columns) {
     const s = v;
-    if (!s || typeof s !== 'object' || typeof s.countryColumn !== 'string' || typeof s.dateColumn !== 'string' || !Array.isArray(s.metrics) || !s.metrics.length || s.metrics.length > 8 || !Array.isArray(s.kpis) || s.kpis.length > 8 || !Array.isArray(s.charts) || s.charts.length > 24)
-        throw Error('Spesifikasi dashboard tidak valid.');
+    if (!s || typeof s !== 'object' || typeof s.countryColumn !== 'string' || typeof s.dateColumn !== 'string' || !Array.isArray(s.metrics) || !s.metrics.length || s.metrics.length > 64 || !Array.isArray(s.kpis) || s.kpis.length > 32 || !Array.isArray(s.charts) || s.charts.length > 24)
+        throw Error('Dashboard needs filter column names, one to sixty-four metrics, up to thirty-two KPIs, and up to twenty-four charts.');
     for (const chart of s.charts)
         for (const key of ['xColumn', 'yColumn', 'bins', 'view', 'width', 'displayView'])
             if (chart[key] === null)
@@ -36,12 +36,21 @@ export function validateSpec(v, columns) {
         if (!c || c.displayView && c.displayView !== 'table' || c.view && !['area', 'line', 'bar', 'ranking', 'table', 'pie', 'donut', 'treemap', 'histogram', 'scatter', 'boxplot'].includes(c.view) || c.width && !['wide', 'standard'].includes(c.width) || typeof c.title !== 'string' || !ids.has(c.metric) || !col(c.groupBy) || typeof c.time !== 'boolean' || !Number.isInteger(c.limit) || c.limit < 1 || c.limit > 100)
             throw Error('Grafik tidak valid.');
     for (const c of s.charts) {
+        if (c.tableMetrics && (!Array.isArray(c.tableMetrics) || c.tableMetrics.length > 12 || !c.tableMetrics.every(id => ids.has(id)) || c.view !== 'table'))
+            throw Error('Table metric IDs must reference existing metrics and use table view.');
+        if (!c.xColumn && ['histogram', 'boxplot'].includes(c.view || '')) {
+            const metric = s.metrics.find(m => m.id === c.metric);
+            if (metric?.columns.length === 1)
+                c.xColumn = metric.columns[0];
+            else if (c.view === 'histogram' && col(c.groupBy))
+                c.xColumn = c.groupBy;
+        }
         if (c.position && (!['x', 'y', 'w', 'h', 'page'].every(k => Number.isInteger(c.position[k])) || c.position.x < 0 || c.position.y < 0 || c.position.w < 3 || c.position.h < 3 || c.position.x + c.position.w > 12 || c.position.y + c.position.h > 10000 || c.position.page < 0 || c.position.page > 99))
             delete c.position;
         if (['histogram', 'scatter', 'boxplot'].includes(c.view || '') && (!c.xColumn || !col(c.xColumn)))
-            throw Error('A numeric xColumn is required.');
+            throw Error(`Chart "${c.title}" (${c.view}) needs xColumn naming an existing numeric column.`);
         if (c.view === 'scatter' && (!c.yColumn || !col(c.yColumn)))
-            throw Error('A numeric yColumn is required.');
+            throw Error(`Chart "${c.title}" (${c.view}) needs yColumn naming an existing numeric column.`);
         if (c.view === 'histogram' && s.metrics.find(m => m.id === c.metric)?.operation !== 'count')
             throw Error('Histogram requires a count metric.');
         if (c.bins !== undefined && (!Number.isInteger(c.bins) || c.bins < 2 || c.bins > 50))
@@ -69,7 +78,13 @@ export function reduceCube(cube, f) {
     const charts = s.charts.map((c, i) => { if (c.view === 'histogram')
         for (const label of v.histogramLabels?.[String(i)] || [])
             if (!groups[i].has(label))
-                groups[i].set(label, [0, 0, []]); const m = s.metrics.find(m => m.id === c.metric); const entries = [...groups[i]].map(([key, a]) => [key, value(m, a)]).sort(c.view === 'histogram' ? (a, b) => Number(a[0].split(' — ')[0]) - Number(b[0].split(' — ')[0]) : c.time ? (a, b) => a[0].localeCompare(b[0]) : (a, b) => b[1] - a[1]).slice(0, c.view === 'histogram' ? (c.bins || 10) : c.limit); const observations = (v.observations || []).filter(([country, date, j]) => j === i && match(country, date)); const sorted = (numbers) => numbers.sort((a, b) => a - b); const quantile = (a, q) => { const position = (a.length - 1) * q, lo = Math.floor(position); return a[lo] + (a[Math.ceil(position)] - a[lo]) * (position - lo); }; const boxes = c.view === 'boxplot' ? [...new Set(observations.map(o => o[3]))].slice(0, c.limit).map(name => { const a = sorted(observations.filter(o => o[3] === name).map(o => o[4])); return { name, low: a[0], q1: quantile(a, .25), median: quantile(a, .5), q3: quantile(a, .75), high: a[a.length - 1] }; }) : undefined; return { position: c.position, id: JSON.stringify([c.title, c.metric, c.groupBy]), displayView: c.displayView, points: ['scatter', 'boxplot', 'histogram'].includes(c.view || '') ? observations.map(o => ({ x: o[4], ...(c.view === 'scatter' ? { y: o[5] } : {}), group: o[3] })) : undefined, boxes, sampled: v.sampledCharts?.includes(i), groupColumn: c.groupBy, xColumn: c.xColumn, yColumn: c.yColumn, title: c.title, time: c.time, view: c.view || (c.time ? 'area' : 'ranking'), width: c.width || 'standard', labels: entries.map(x => x[0]), values: entries.map(x => x[1]) }; });
+                groups[i].set(label, [0, 0, []]); const m = s.metrics.find(m => m.id === c.metric); const entries = [...groups[i]].map(([key, a]) => [key, value(m, a)]).sort(c.view === 'histogram' ? (a, b) => Number(a[0].split(' — ')[0]) - Number(b[0].split(' — ')[0]) : c.time ? (a, b) => a[0].localeCompare(b[0]) : (a, b) => b[1] - a[1]).slice(0, c.view === 'histogram' ? (c.bins || 10) : c.limit); const observations = (v.observations || []).filter(([country, date, j]) => j === i && match(country, date)); const sorted = (numbers) => numbers.sort((a, b) => a - b); const quantile = (a, q) => { const position = (a.length - 1) * q, lo = Math.floor(position); return a[lo] + (a[Math.ceil(position)] - a[lo]) * (position - lo); }; const boxes = c.view === 'boxplot' ? [...new Set(observations.map(o => o[3]))].slice(0, c.limit).map(name => { const a = sorted(observations.filter(o => o[3] === name).map(o => o[4])); return { name, low: a[0], q1: quantile(a, .25), median: quantile(a, .5), q3: quantile(a, .75), high: a[a.length - 1] }; }) : undefined; const tableIds = c.tableMetrics?.length ? c.tableMetrics : undefined; const tableGroups = new Map(); if (tableIds)
+        for (const [country, date, j, id, label, a] of v.tableMetrics || [])
+            if (j === i && match(country, date)) {
+                const row = tableGroups.get(label) || new Map();
+                row.set(id, merge(row.get(id) || [0, 0, []], a));
+                tableGroups.set(label, row);
+            } const tableHeaders = tableIds ? [c.groupBy, ...tableIds.map(id => { const metric = s.metrics.find(m => m.id === id); return `${metric.operation} ${metric.columns.join(' × ') || 'rows'}`; })] : undefined; const tableRows = tableIds ? [...tableGroups].slice(0, c.limit).map(([label, row]) => [label, ...tableIds.map(id => value(s.metrics.find(m => m.id === id), row.get(id) || [0, 0, []]))]) : undefined; return { tableHeaders, tableRows, metricLabel: `${m.operation} ${m.columns.join(' × ') || 'rows'}`, position: c.position, id: JSON.stringify([c.title, c.metric, c.groupBy]), displayView: c.displayView, points: ['scatter', 'boxplot', 'histogram'].includes(c.view || '') ? observations.map(o => ({ x: o[4], ...(c.view === 'scatter' ? { y: o[5] } : {}), group: o[3] })) : undefined, boxes, sampled: v.sampledCharts?.includes(i), groupColumn: c.groupBy, xColumn: c.xColumn, yColumn: c.yColumn, title: c.title, time: c.time, view: c.view || (c.time ? 'area' : 'ranking'), width: c.width || 'standard', labels: entries.map(x => x[0]), values: entries.map(x => x[1]) }; });
     const rows = v.rows.reduce((n, [country, date, count]) => n + (match(country, date) ? count : 0), 0);
     return { rows, kpis, charts, definitions: describeSpec(s), cleaning_log: [f.deduplicate ? 'Exact duplicates across every column are excluded; the first row is retained. Timestamps are compared without rounding.' : 'Exact duplicate rows are retained. The source file is unchanged.'] };
 }

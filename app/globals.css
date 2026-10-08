@@ -187,7 +187,7 @@
 .canvas-chart-grid .recharts-cartesian-axis-tick{font-size:11px}.canvas-chart-grid .recharts-legend-wrapper{font-size:10px}
 @media(max-width:760px){.dashboard-frame .dashboard-canvas .chart-panel{min-height:0}.canvas-kpi-strip .canvas-metric strong{font-size:28px}.canvas-report-header .dataset-tools{flex-wrap:nowrap}.dashboard-frame .dashboard-canvas .canvas-tile{height:100%;min-height:0}.canvas-toolbar>button{display:block}}
 
-.canvas-chart-grid .chart-table{max-height:100%;overflow:auto}
+.canvas-chart-grid .chart-table{height:100%;overflow:hidden}.canvas-chart-grid .chart-table table{table-layout:fixed;height:100%}.canvas-chart-grid .chart-table td,.canvas-chart-grid .chart-table th{padding:0 3px;line-height:1.15;word-break:break-word}
 
 .canvas-report-header>div:first-child{max-width:46%;min-width:0}.canvas-report-header h2{line-height:1.2;overflow-wrap:anywhere}.canvas-report-header>div>span{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .chart-menu .chart-values-trigger{margin-top:10px;font-size:12px}
