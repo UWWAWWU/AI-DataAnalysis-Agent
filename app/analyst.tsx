@@ -1,5 +1,5 @@
 'use client';
-import {runAnalysisAgent,validateAgentDecision,type AgentRun} from '@/lib/analysis-agent';
+import {runAnalysisAgent,validateAgentDecision,restoreAgentRun,type AgentRun} from '@/lib/analysis-agent';
 import {reviseDashboard,appendDashboard,validateFilterChange} from '@/lib/dashboard-actions';
 import {aiContextReplacer} from '@/lib/ai-summary';
 import {categoryName,type CategoryDictionary} from '@/lib/category-labels';
@@ -103,7 +103,7 @@ export default function Analyst() {
         void (async()=>{try{
             sessionId.current=initTabSession();
             let saved=await readSession<any>(sessionId.current+':ui');
-            const savedAgent=await readSession<AgentRun>(sessionId.current+':agent');
+            const storedAgent=await readSession<AgentRun>(sessionId.current+':agent');const savedAgent=storedAgent?restoreAgentRun(storedAgent):undefined;
             const restored=await call('sessionRestore',{sessionId:sessionId.current,filter:saved?.filter||INITIAL});
             if(!live)return;
             if(saved?.datasetVersion!==restored.datasetVersion)saved=undefined;datasetVersion.current=restored.datasetVersion||'';
@@ -187,7 +187,7 @@ export default function Analyst() {
         const controller=new AbortController();agentAbort.current=controller;
         const timer=setTimeout(()=>controller.abort(new Error('Analysis execution budget reached. Continue from the saved checkpoint.')),8*60*1000);
         const prior=resume&&agentCurrent.current?.datasetVersion===datasetVersion.current&&JSON.stringify(agentCurrent.current.selection)===JSON.stringify(f)?agentCurrent.current:null;
-        const initial:AgentRun=prior?{...prior}: {version:1,datasetVersion:datasetVersion.current,goal:objective||'Explore this dataset: investigate data quality, relevant distributions and relationships; build a clear dashboard and explain the supported findings.',phase:'running',reports:[],selection:{...f},plan:answer.startsWith('Requested change:')?plan||undefined:undefined};
+        const initial:AgentRun=prior?{...prior}: {version:1,datasetVersion:datasetVersion.current,allowClarification:Boolean(objective.trim()),goal:objective||'Explore this dataset: investigate data quality, relevant distributions and relationships; build a clear dashboard and explain the supported findings.',phase:'running',reports:[],selection:{...f},plan:answer.startsWith('Requested change:')?plan||undefined:undefined};
         if(answer&&!answer.startsWith('Requested change:')){initial.goal+=' User clarification: '+answer;initial.question=undefined;initial.pending=undefined;}
         computedResult.current=resume?result:null;computedPlan.current=initial.plan||null;
         try{
