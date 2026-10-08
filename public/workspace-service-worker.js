@@ -1,4 +1,4 @@
-const CACHE='analysis-offline-v1';
+const CACHE='analysis-offline-v2';
 const assets=['/','/favicon.svg','/favicon.svg?v=cream','/logo-round.svg','/data-worker.js','/engine.js','/dashboard-engine.js','/review-engine.js','/preparation-engine.js','/presentation-engine.js','/session-store.js','/xlsx.full.min.js','/interactive-dashboard.js'];
 const allowed=url=>url.origin===self.location.origin&&(url.pathname==='/'||url.pathname.startsWith('/_next/static/')||assets.includes(url.pathname));
 self.addEventListener('install',event=>{event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(assets)).then(()=>self.skipWaiting()))});
