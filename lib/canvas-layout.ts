@@ -23,46 +23,32 @@ export function chartRows(chart:Pick<Chart,'view'|'labels'|'sampled'|'title'>,vi
  const content=view==='ranking'?Math.ceil((count*23+190)/92):view==='table'?Math.ceil((Math.min(count,10)*30+220)/92):baseline;
  return Math.max(baseline,content,chart.title.length>65?6:0);
 }
-/** Semantic rows use all available columns. AI sizes are hints; empty coordinates never create holes. */
-export function composeDashboard(charts:Chart[],keys:string[],metrics:string[],options:{width?:number;layout?:string;kpiPlacement?:KpiPlacement;minimums?:Record<string,number>;editing?:boolean}={}):Tile[]{
- const width=options.width||1200,tiles:Tile[]=[];let y=0;
- const queue=charts.map((chart,i)=>({chart,key:keys[i]}));
- const compact=(c:Chart)=>['pie','donut','treemap','histogram'].includes(c.view||'')||(c.view==='bar'&&c.labels.length<=7);
- const detailed=(c:Chart)=>c.time||['scatter','table','boxplot'].includes(c.view||'')||(c.labels.length>12&&c.view!=='histogram')||(c.view==='histogram'&&c.labels.length>20);
- const row=(items:typeof queue,widths:number[],x=0,start=y,minH=0)=>{
-  const h=Math.max(minH,...items.map(({chart,key})=>Math.max(chartRows(chart),chart.position?.h||0,options.minimums?.[key]||0)+(options.editing?1:0)));
-  items.forEach(({key},i)=>{tiles.push({key,x,y:start,w:widths[i],h,page:0});x+=widths[i]});return start+h;
- };
- const metricHeight=(label:string,w:number)=>Math.max(1,Math.ceil((Math.ceil(label.length/Math.max(12,(width*w/12-32)/6))*14+50)/92));
- const metricRows=()=>{
-  if(!metrics.length)return;
-  const max=options.kpiPlacement==='grouped'?4:width>=1150?6:4;
-  const groups=Math.ceil(metrics.length/max),perRow=Math.ceil(metrics.length/groups);
-  for(let i=0;i<metrics.length;i+=perRow){const labels=metrics.slice(i,i+perRow),widths=labels.map((_,j)=>Math.floor(12/labels.length)+(j<12%labels.length?1:0)),h=Math.max(...labels.map((label,j)=>metricHeight(label,widths[j])));let x=0;labels.forEach((label,j)=>{const w=widths[j];tiles.push({key:`kpi:${label}`,x,y,w,h,page:0});x+=w});y+=h}
- };
- const sidebar=queue.length>0&&metrics.length>0&&(options.kpiPlacement==='sidebar'||(options.kpiPlacement!=='horizontal'&&options.kpiPlacement!=='grouped'&&metrics.length>=4&&metrics.length<=6&&!charts.some(c=>c.time)&&charts.some(c=>c.view==='scatter')));
- if(sidebar){
-  const index=queue.findIndex(({chart})=>chart.view==='scatter');const [primary]=queue.splice(Math.max(0,index),1);
-  const metricHeights=metrics.map(label=>metricHeight(label,3)),total=metricHeights.reduce((a,b)=>a+b,0);
-  const h=Math.max(total,chartRows(primary.chart),options.minimums?.[primary.key]||0)+(options.editing?1:0);let cursor=0;
-  metrics.forEach((label,i)=>{const start=cursor;cursor+=metricHeights[i];tiles.push({key:`kpi:${label}`,x:0,y:Math.floor(start*h/total),w:3,h:Math.floor(cursor*h/total)-Math.floor(start*h/total),page:0})});
-  y=row([primary],[9],3,0,h);
- }else if(options.layout==='charts-first'&&queue.length){y=row([queue.shift()!],[12]);metricRows()}else metricRows();
- while(queue.length){
-  const first=queue[0];
-  if(chartRows(first.chart)>9||first.chart.time||first.chart.width==='wide'||(first.chart.position?.w||0)>=8||first.chart.view==='table'){
-   const companion=queue.findIndex((item,i)=>i>0&&compact(item.chart)&&!item.chart.time);
-   if(companion>0&&queue.length<=3&&chartRows(first.chart)<=9&&first.chart.view!=='table'&&width>=1000&&first.chart.labels.length<=18){queue.shift();const [other]=queue.splice(companion-1,1);y=row([first,other],[8,4])}
-   else y=row([queue.shift()!],[12]);
-  }else{
-   const small=queue.filter(({chart})=>compact(chart)&&!detailed(chart));
-   const n=width>=1300&&small.length>=4&&compact(first.chart)?4:small.length>=3&&compact(first.chart)?3:queue.length>=2?2:1;
-   const items=n>=3?small.slice(0,n):queue.slice(0,n);
-   for(const item of items)queue.splice(queue.indexOf(item),1);
-   let widths=n===4?[3,3,3,3]:n===3?[4,4,4]:n===1?[12]:detailed(items[0].chart)&&!detailed(items[1].chart)?[7,5]:!detailed(items[0].chart)&&detailed(items[1].chart)?[5,7]:[6,6];
-   if(n===2&&items[0].chart.position?.w&&items[1].chart.position?.w&&items[0].chart.position.w+items[1].chart.position.w===12)widths=items.map(({chart})=>chart.position!.w);
-   y=row(items,widths);
-  }
+/** Choose row groupings by chart shape and density, within a fixed presentation area. */
+export function composeDashboard(charts:Chart[],keys:string[],_metrics:string[],options:{width?:number;height?:number;layout?:string;kpiPlacement?:KpiPlacement;minimums?:Record<string,number>;editing?:boolean}={}):Tile[]{
+ if(!charts.length)return [];
+ const width=options.width||1552,height=options.height||650,n=charts.length;
+ const aspect=(c:Chart)=>c.view==='scatter'||c.view==='boxplot'?1.55:c.view==='ranking'?Math.max(.8,2.2-c.labels.length*.05):c.view==='table'?1.8:c.time?c.labels.length>8?2.8:1.8:['pie','donut'].includes(c.view||'')?1.25:2;
+ const variants:Record<number,number[][]>={1:[[12]],2:[[6,6],[7,5],[5,7],[8,4],[4,8]],3:[[4,4,4],[6,3,3],[3,6,3],[3,3,6]],4:[[3,3,3,3]]};
+ let best:{cost:number;groups:{start:number;widths:number[]}[]}|undefined;
+ for(let rows=1;rows<=n;rows++){
+  if(n>rows*4)continue;
+  const h=(height-(rows-1)*12)/rows;
+  const memo=new Map<string,{cost:number;groups:{start:number;widths:number[]}[]}|null>();
+  const solve=(start:number,left:number):{cost:number;groups:{start:number;widths:number[]}[]}|null=>{
+   if(!left)return start===n?{cost:0,groups:[]}:null;
+   const key=start+':'+left;if(memo.has(key))return memo.get(key)!;
+   let result:{cost:number;groups:{start:number;widths:number[]}[]}|null=null;
+   for(let size=1;size<=4&&start+size<=n;size++){
+    const remaining=n-start-size;if(remaining<left-1||remaining>(left-1)*4)continue;
+    const tail=solve(start+size,left-1);if(!tail)continue;
+    for(const widths of variants[size]){
+     let cost=tail.cost;
+     widths.forEach((w,i)=>{const c=charts[start+i],panelW=(width+12)*w/12-12;cost+=Math.log(panelW/h/aspect(c))**2;cost+=Math.max(0,140-h)/100;cost+=c.title.length>55&&w<=3?.35:0;});
+     if(!result||cost<result.cost)result={cost,groups:[{start,widths},...tail.groups]};
+    }
+   }memo.set(key,result);return result;
+  };
+  const candidate=solve(0,rows);if(candidate&&(!best||candidate.cost<best.cost))best=candidate;
  }
- return tiles;
+ return best!.groups.flatMap(({start,widths},y)=>{let x=0;return widths.map((w,i)=>{const tile={key:keys[start+i],x,y,w,h:1,page:0};x+=w;return tile})});
 }

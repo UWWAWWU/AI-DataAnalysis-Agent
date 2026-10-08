@@ -15,6 +15,6 @@ export async function exportPDF(report:Report,name:string){
  await document.fonts.ready;
  await new Promise<void>(resolve=>requestAnimationFrame(()=>requestAnimationFrame(()=>resolve())));
  const {toPng}=await import('html-to-image');
- const image=await toPng(canvas,{width:canvas.offsetWidth,height:canvas.offsetHeight,pixelRatio:Math.min(2,6000/canvas.offsetWidth),backgroundColor:'#ede9e2',style:{transform:'none'},filter:node=>!(node instanceof HTMLElement&&node.classList.contains('tile-tools'))&&!(node instanceof HTMLElement&&node.classList.contains('tile-resize'))});
+ const image=await toPng(canvas,{width:canvas.offsetWidth,height:canvas.offsetHeight,pixelRatio:Math.min(2,6000/canvas.offsetWidth),backgroundColor:getComputedStyle(canvas).backgroundColor,style:{transform:'none'},filter:node=>!(node instanceof HTMLElement&&node.classList.contains('chart-menu'))&&!(node instanceof HTMLElement&&node.classList.contains('tile-tools'))&&!(node instanceof HTMLElement&&node.classList.contains('tile-resize'))});
  buildReportPDF(image).save(name);
 }
