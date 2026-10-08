@@ -198,7 +198,7 @@ export default function Analyst() {
                     setStage('planning');setStatus('The AI is evaluating evidence and choosing the next analysis.');
                     const context={...run,reports:run.reports.map(report=>({...report,result:report.kind==='dashboard'?{rows:(report.result as any)?.rows,kpis:(report.result as any)?.kpis,charts:(report.result as any)?.charts?.map((c:Chart)=>({title:c.title,description:c.description,labels:c.labels.slice(0,20),values:c.values.slice(0,20),displayedCategories:c.labels.length,truncated:c.labels.length>20,aggregation:c.aggregation})),definitions:(report.result as any)?.definitions}:report.result}))};
                     const response=await ai('agent',run.goal,p,f,computedResult.current,computedPlan.current||undefined,undefined,false,context,controller.signal);
-                    return validateAgentDecision(response.decision,p.columns.map(c=>c.name));
+                    return validateAgentDecision(response.decision,p.columns.map(c=>c.name),run);
                 },
                 tool:async tool=>{setStage('planning');setStatus('Running data investigation: '+tool.name+'.');return await call('agentTool',{tool,filter:f,spec:computedPlan.current?.dashboard||initial.plan?.dashboard},controller.signal);},
                 dashboard:async next=>{
