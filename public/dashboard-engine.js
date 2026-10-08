@@ -51,6 +51,8 @@ export function validateSpec(v, columns, numericColumns) {
         if (!c || c.displayView && c.displayView !== 'table' || c.view && !['area', 'line', 'bar', 'ranking', 'table', 'pie', 'donut', 'treemap', 'histogram', 'scatter', 'boxplot'].includes(c.view) || c.width && !['wide', 'standard'].includes(c.width) || typeof c.title !== 'string' || !ids.has(c.metric) || !col(c.groupBy) || typeof c.time !== 'boolean' || !Number.isInteger(c.limit) || c.limit < 1 || c.limit > 100)
             throw Error('Grafik tidak valid.');
     for (const c of s.charts) {
+        if (c.tableMetrics === null || Array.isArray(c.tableMetrics) && !c.tableMetrics.length)
+            delete c.tableMetrics;
         if (c.tableMetrics && (!Array.isArray(c.tableMetrics) || c.tableMetrics.length > 12 || !c.tableMetrics.every(id => ids.has(id)) || c.view !== 'table'))
             throw Error('Table metric IDs must reference existing metrics and use table view.');
         if (!c.xColumn && ['histogram', 'boxplot'].includes(c.view || '')) {

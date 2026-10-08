@@ -34,7 +34,7 @@ export function validateAgentDecision(value:unknown,names:string[],run?:AgentRun
  if(run&&d.action==='clarify'&&!run.allowClarification)throw Error('Automatic exploration must continue using the data and explicit assumptions. Optional clarification is not allowed.');
  if(run&&!agentAllowedActions(run).includes(d.action))throw Error('A successful investigation tool result is required before building or finishing the dashboard. Choose a valid tool action.');
  if(d.action==='tool')d.tool=validateAgentTool(d.tool,names);
- if(d.action==='dashboard'){d.plan=validatePlan({...d.plan,code:'# Trusted engine executes the validated specification.'});validateSpec(d.plan.dashboard,names,numericColumns);d.plan.questions=[];}
+ if(d.action==='dashboard'){if(d.plan&&typeof d.plan==='object'){if(d.plan.title===undefined||typeof d.plan.title==='string'&&!d.plan.title.trim())d.plan.title=d.purpose.slice(0,200);if(d.plan.objective===undefined||typeof d.plan.objective==='string'&&!d.plan.objective.trim())d.plan.objective=d.purpose;}d.plan=validatePlan({...d.plan,code:'# Trusted engine executes the validated specification.'});validateSpec(d.plan.dashboard,names,numericColumns);d.plan.questions=[];}
  if(d.action==='clarify'&&(typeof d.question!=='string'||!d.question.trim()))throw Error('Clarification needs a specific question.');
  if(d.evidenceIds!==undefined&&(!Array.isArray(d.evidenceIds)||d.evidenceIds.some(id=>typeof id!=='string')))throw Error('Invalid evidence references.');
  if(d.limitations!==undefined&&(!Array.isArray(d.limitations)||d.limitations.some(s=>typeof s!=='string')))throw Error('Invalid limitations.');

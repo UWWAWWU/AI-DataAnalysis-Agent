@@ -77,9 +77,10 @@ for _dedup in [False,True]:
     for i,metric in enumerate(_spec['metrics']):
         part=_metric_frame(frame,metric)
         for key,stats in _aggregate(part,base,metric): variant['metrics'].append(key+[i,stats])
+        _metric_part=part
         for j,chart in enumerate(_spec['charts']):
             if chart['metric']!=metric['id'] and metric['id'] not in chart.get('tableMetrics',[]): continue
-            part=part.copy()
+            part=_metric_part.copy()
             if chart.get('tableMetrics'):
                 part['__group__']=_text(part[chart['groupBy']]).replace('','(missing)')
                 for key,stats in _aggregate(part,base+['__group__'],metric): variant['tableMetrics'].append(key[:2]+[j,metric['id'],key[2],stats])
