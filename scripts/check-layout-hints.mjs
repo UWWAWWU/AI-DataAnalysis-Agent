@@ -1,0 +1,6 @@
+import fs from 'node:fs';import ts from 'typescript';import assert from 'node:assert/strict';
+const source=fs.readFileSync('lib/dashboard.ts','utf8');const {validateSpec}=await import('data:text/javascript;base64,'+Buffer.from(ts.transpileModule(source,{compilerOptions:{module:ts.ModuleKind.ESNext,target:ts.ScriptTarget.ES2022}}).outputText).toString('base64'));
+const base={countryColumn:'zone',dateColumn:'observation_date',metrics:[{id:'oxygen',operation:'mean',columns:['dissolved_oxygen_mg_l'],rules:[]}],kpis:[{label:'Mean oxygen',metric:'oxygen'}],charts:[{title:'Oxygen by zone',metric:'oxygen',groupBy:'zone',time:false,limit:10,view:'bar',position:{x:0,y:18,w:6,h:5,page:0}}]};
+const cols=['zone','observation_date','dissolved_oxygen_mg_l'];assert.equal(validateSpec(structuredClone(base),cols).charts[0].position.y,18);
+const invalid=structuredClone(base);invalid.charts[0].position.x=11;const fixed=validateSpec(invalid,cols);assert.equal(fixed.charts[0].position,undefined);assert.deepEqual(fixed.metrics,base.metrics);assert.deepEqual(fixed.kpis,base.kpis);
+const badMetric=structuredClone(base);badMetric.metrics[0].columns=['invented'];assert.throws(()=>validateSpec(badMetric,cols));console.log('Flexible rows and invalid layout hint recovery passed; metric validation remains strict.');

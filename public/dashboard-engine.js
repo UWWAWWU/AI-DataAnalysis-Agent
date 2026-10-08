@@ -36,8 +36,8 @@ export function validateSpec(v, columns) {
         if (!c || c.displayView && c.displayView !== 'table' || c.view && !['area', 'line', 'bar', 'ranking', 'table', 'pie', 'donut', 'treemap', 'histogram', 'scatter', 'boxplot'].includes(c.view) || c.width && !['wide', 'standard'].includes(c.width) || typeof c.title !== 'string' || !ids.has(c.metric) || !col(c.groupBy) || typeof c.time !== 'boolean' || !Number.isInteger(c.limit) || c.limit < 1 || c.limit > 100)
             throw Error('Grafik tidak valid.');
     for (const c of s.charts) {
-        if (c.position && (!['x', 'y', 'w', 'h', 'page'].every(k => Number.isInteger(c.position[k])) || c.position.x < 0 || c.position.y < 0 || c.position.w < 3 || c.position.h < 3 || c.position.x + c.position.w > 12 || c.position.y + c.position.h > 12 || c.position.page < 0 || c.position.page > 99))
-            throw Error('Invalid dashboard position.');
+        if (c.position && (!['x', 'y', 'w', 'h', 'page'].every(k => Number.isInteger(c.position[k])) || c.position.x < 0 || c.position.y < 0 || c.position.w < 3 || c.position.h < 3 || c.position.x + c.position.w > 12 || c.position.y + c.position.h > 10000 || c.position.page < 0 || c.position.page > 99))
+            delete c.position;
         if (['histogram', 'scatter', 'boxplot'].includes(c.view || '') && (!c.xColumn || !col(c.xColumn)))
             throw Error('A numeric xColumn is required.');
         if (c.view === 'scatter' && (!c.yColumn || !col(c.yColumn)))
