@@ -61,7 +61,7 @@ flowchart TD
 
 ### Planning
 
-Language models choose a next action from the profile, user goal, prior tool results and execution errors. Decisions are validated against existing columns and allowed read-only tools. The loop continues after a dashboard is computed; completion requires references to successful investigation evidence and the latest dashboard result. An expandable Analysis activity section shows actual actions and outcomes.
+Language models choose a next action from the profile, user goal, prior tool results and execution errors. Decisions are validated against existing columns and allowed read-only tools. The loop continues after a dashboard is computed; completion requires references to successful investigation evidence and the latest dashboard result. Investigation evidence is retained in the saved session and JSON report.
 
 ### Recovery and execution budgets
 
