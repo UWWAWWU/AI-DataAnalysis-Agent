@@ -21,5 +21,6 @@ export function useLocalizedContent(texts:string[],locale:Locale,model:string,co
  const remember=(texts:string[],language:Locale)=>{for(const text of texts.filter(Boolean))cache.current.set(language+'\0'+text,text);setRevision(n=>n+1)};
  const hasPending=(JSON.parse(originals) as string[]).some(text=>staticText(text)===null&&!cache.current.has(locale+'\0'+text));
  const translate=(text:string)=>!text?'':staticText(text)??cache.current.get(locale+'\0'+text)??(error?text:locale==='id'?'Menerjemahkan…':'Translating…');
- return {translate,remember,loading:loading||(hasPending&&!error),error,retry:()=>setRetry(n=>n+1),revision};
+ const snapshot=()=>[...cache.current];const restore=(entries:[string,string][])=>{cache.current=new Map(entries);setRevision(n=>n+1)};
+ return {translate,remember,snapshot,restore,loading:loading||(hasPending&&!error),error,retry:()=>setRetry(n=>n+1),revision};
 }

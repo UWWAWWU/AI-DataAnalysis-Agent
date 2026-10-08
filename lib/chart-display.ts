@@ -1,7 +1,10 @@
 import type {Chart} from './analysis';
 export const PLOT_TYPES=['bar','ranking','line','area','table','pie','donut','treemap','histogram','scatter','boxplot'] as const;
 export type PlotType=typeof PLOT_TYPES[number];
-export function categoryColor(name:string){let hash=2166136261;for(const c of name.normalize('NFKC').trim().toLowerCase())hash=Math.imul(hash^c.charCodeAt(0),16777619)>>>0;return `hsl(${hash%360}, 52%, 46%)`;}
+export const CHART_PALETTE=['#4477CC','#E88439','#9B63CB','#27A6A0','#D55B80','#BA9A29','#6888A4','#B76D48','#758F3B','#705BB5','#3198C2','#CE6750'];
+export function categoryColor(name:string,palette:'vivid'|'pastel'='vivid',colors:Record<string,unknown>={}){let hash=2166136261;for(const c of name.normalize('NFKC').trim().toLowerCase())hash=Math.imul(hash^c.charCodeAt(0),16777619)>>>0;const color=typeof colors[name]==='string'?colors[name] as string:CHART_PALETTE[hash%CHART_PALETTE.length];if(palette==='vivid')return color;const rgb=[1,3,5].map(i=>Math.round(parseInt(color.slice(i,i+2),16)*.65+255*.35));return '#'+rgb.map(n=>n.toString(16).padStart(2,'0')).join('');}
+/** Resolve palette collisions once, then retain assignments through filters and refreshes. */
+export function extendColors(names:string[],previous:Record<string,unknown>={}){const colors={...previous},used=new Set(Object.values(colors));for(const name of [...new Set(names)]){if(colors[name])continue;if(used.size>=CHART_PALETTE.length)used.clear();const preferred=CHART_PALETTE.indexOf(categoryColor(name));const color=Array.from({length:CHART_PALETTE.length},(_,i)=>CHART_PALETTE[(preferred+i)%CHART_PALETTE.length]).find(color=>!used.has(color))!;colors[name]=color;used.add(color)}return colors;}
 export type SeriesDatum={name:string;value:number};
 export type Box={name:string;low:number;q1:number;median:number;q3:number;high:number};
 export function histogram(numbers:number[],bins=10):SeriesDatum[]{if(!numbers.length)return [];let low=Infinity,high=-Infinity;for(const n of numbers){low=Math.min(low,n);high=Math.max(high,n)}if(low===high){low-=.5;high+=.5}const step=(high-low)/bins;const data=Array.from({length:bins},(_,i)=>({name:`${Number((low+step*i).toPrecision(5))} — ${Number((low+step*(i+1)).toPrecision(5))}`,value:0}));for(const n of numbers)data[Math.min(bins-1,Math.max(0,Math.floor((n-low)/step)))].value++;return data;}

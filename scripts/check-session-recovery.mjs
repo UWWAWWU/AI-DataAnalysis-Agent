@@ -1,0 +1,16 @@
+import fs from 'node:fs';
+import ts from 'typescript';
+import assert from 'node:assert/strict';
+const load=async file=>import('data:text/javascript;base64,'+Buffer.from(ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.ESNext}}).outputText).toString('base64'));
+const {tabSessionId}=await load('lib/session-store.ts');
+assert.equal(tabSessionId('reload','existing-tab'),'existing-tab');
+assert.equal(tabSessionId('back_forward','existing-tab'),'existing-tab');
+assert.notEqual(tabSessionId('navigate','copied-opener-tab'),'copied-opener-tab');
+assert.notEqual(tabSessionId('reload',null),tabSessionId('reload',null));
+const {extendColors,categoryColor}=await load('lib/chart-display.ts');
+const categories=['Jakarta','Bandung','Surabaya','Medan','Online','Store','Marketplace','Electronics','Fashion','Home','Beauty'];
+const colors=extendColors(categories);assert.equal(new Set(categories.map(name=>colors[name])).size,categories.length);
+const before=JSON.stringify(colors),extended=extendColors(['New category'],colors);assert.equal(JSON.stringify(colors),before);for(const name of categories)assert.equal(extended[name],colors[name]);
+assert.equal(categoryColor('Jakarta','vivid',colors),colors.Jakarta);assert.notEqual(categoryColor('Jakarta','pastel',colors),colors.Jakarta);
+const app=fs.readFileSync('app/analyst.tsx','utf8');const saved=app.slice(app.indexOf('latestSession.current='),app.indexOf('const sessionRevision'));assert.doesNotMatch(saved,/apiKey|e2bKey/);
+console.log('Same-tab reload/back navigation, fresh new tabs including copied opener IDs, collision-free categories, retained colors and exclusion of credentials passed.');

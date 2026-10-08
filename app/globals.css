@@ -198,3 +198,5 @@
 .canvas-chart-content{transform-origin:top left;display:flex;flex:none;min-width:0;min-height:0}
 
 .canvas-toolbar .canvas-readiness{margin-right:auto;font-size:10px;align-items:flex-start;min-width:0}.canvas-toolbar{justify-content:flex-end}
+
+.canvas-kpi-strip .canvas-metric{border-top-color:var(--metric-color,#ac633f)!important}

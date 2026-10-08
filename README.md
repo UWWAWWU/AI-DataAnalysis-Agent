@@ -4,7 +4,7 @@
 
 # AI Data Analysis Agent
 
-**From raw data to a clearer picture.**
+**From raw data to clear insights.**
 
 An intelligent workspace that turns CSV and Excel files into interactive dashboards, grounded insights, and a conversation with your data.
 
@@ -32,7 +32,8 @@ The project combines language models for analysis planning and explanations, Pyt
 | **Data profiling** | Inspect columns, missing values, and identical rows through Data Details. |
 | **Data Review** | Preview rows requested through the AI assistant, including exact duplicates. |
 | **Controlled cleaning** | Review proposed duplicate removal and apply it when you are ready to update the dashboard. |
-| **Report exports** | Download JSON analysis results, CSV data with applied cleaning, or a single-page 16:9 PDF matching the dashboard canvas. |
+| **Report exports** | Download a self-contained HTML dashboard with offline filters, tooltips and zoom, a single-page 16:9 PDF matching the canvas, cleaned CSV, or JSON analysis results. |
+| **Session recovery** | Refresh the same tab to restore data, dashboard, filters, chat and visual settings. A new tab starts a fresh session. Completed dashboards remain usable offline after the workspace has been cached. |
 | **Two languages** | Use English or Indonesian for the interface and analysis explanations. |
 
 ## From upload to insight
@@ -140,3 +141,5 @@ Scatter coordinates remain in the browser dashboard and are excluded from model 
 AI chooses charts and their initial positions on a single dashboard canvas. Arrange layout enables dragging, keyboard movement, resizing and grid alignment. Adding a chart retains existing chart definitions and visual settings; positions and sizes are rearranged to accommodate new charts in the same canvas. Default is a separate chart-type choice, and the original chart type remains in the list. Visual formatting includes titles, legends, labels, axes and colorful, pastel or single-color palettes. Charts grouped by the dashboard's active categorical filter can filter linked visuals when a category is clicked.
 
 Upload prepares unambiguous numeric values and surrounding whitespace while preserving identifiers, leading-zero codes and ambiguous dates. Original data remains downloadable. AI Requested Data lists exact duplicates, missing values and IQR outlier flags, affected-row previews and expected row counts. Removal and numeric mean/median imputation are staged for review, and affect the dashboard only after Apply changes. Outlier flags are not evidence of invalid records. Exact KPI impacts are computed after application.
+
+Interactive HTML exports contain the dashboard aggregates needed for all supported filter selections. AI chat and new Python analyses remain available in the online application. Session recovery stores working data locally in the browser, scoped to the current tab; it does not upload a backup to a server.
