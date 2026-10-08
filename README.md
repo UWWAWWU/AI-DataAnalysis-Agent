@@ -32,7 +32,7 @@ The project combines language models for analysis planning and explanations, Pyt
 | **Data profiling** | Inspect columns, missing values, and identical rows through Data Details. |
 | **Data Review** | Preview rows requested through the AI assistant, including exact duplicates. |
 | **Controlled cleaning** | Review proposed duplicate removal and apply it when you are ready to update the dashboard. |
-| **Report exports** | Download JSON analysis results, CSV data with applied cleaning, or a PDF report. |
+| **Report exports** | Download JSON analysis results, CSV data with applied cleaning, or a single-page 16:9 PDF matching the dashboard canvas. |
 | **Two languages** | Use English or Indonesian for the interface and analysis explanations. |
 
 ## From upload to insight
@@ -85,6 +85,8 @@ Two rows are considered identical only when their values match across **all colu
 Inspecting duplicates leaves the working dataset unchanged. **Apply Changes** keeps one copy of each exact duplicate within the reviewed scope and updates the dashboard after the user approves the change.
 
 CSV exports reflect the working dataset and cleaning that has actually been applied.
+
+All KPI cards and charts fit inside one fixed 16:9 presentation canvas. The layout scales as visuals are added, including on small screens. PDF export captures the current chart types, formatting and positions on one landscape page.
 
 ## Example requests
 
