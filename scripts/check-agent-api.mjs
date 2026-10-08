@@ -13,3 +13,5 @@ console.log('Actual AI route passes agent schema/context to provider, repairs in
 }finally{globalThis.fetch=originalFetch;if(previousKey===undefined)delete process.env.GEMINI_API_KEY;else process.env.GEMINI_API_KEY=previousKey;}
 
 const {renderGroundedAnswer}=load('lib/insight-facts.ts');const grounded=renderGroundedAnswer({action:'answer',headline:'Regional comparison',observations:[{text:'North leads and is also the lowest region.',factIds:['chart_1_max','chart_1_min']}],limitations:[]},[{id:'chart_1_max',text:'Revenue — highest: North (6216).'},{id:'chart_1_min',text:'Revenue — lowest among displayed categories: East (5245).'}]);assert.doesNotMatch(grounded.answer,/North leads and is also/);assert.match(grounded.answer,/highest: North/);assert.match(grounded.answer,/categories: East/);
+
+const requested=await POST(new Request("http://localhost/api/ai",{method:"POST",headers:{origin:"http://localhost"},body:JSON.stringify({mode:"chat",question:"Run a new analysis: calculate Spearman using Python",summary:{previousDashboard:{}}})}));assert.equal((await requested.json()).action,"update");
