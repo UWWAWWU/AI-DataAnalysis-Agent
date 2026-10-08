@@ -1,13 +1,27 @@
-export const CUBE_PYTHON=String.raw`
+export const DATASET_LOADER_PYTHON=String.raw`
+import re
+def _load_dataset(settings):
+    frame=pd.read_excel(settings['path'],sheet_name=settings['sheet'] or 0,dtype=object,keep_default_na=False) if settings['isExcel'] else pd.read_csv(settings['path'],sep=None,engine='python',encoding='utf-8-sig',dtype=object,keep_default_na=False)
+    frame.columns=frame.columns.map(str)
+    for col in frame.columns:
+        frame[col]=frame[col].map(lambda v: v.strip() if isinstance(v,str) else v)
+        values=[v for v in frame[col] if not pd.isna(v) and v!='']
+        if values and not re.search(r'(?:id|code|phone|zip|postal|invoice)$|invoice',col,re.I) and all(isinstance(v,(int,float,np.number)) and np.isfinite(v) or isinstance(v,str) and re.fullmatch(r'[+-]?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?',v) and np.isfinite(float(v)) for v in values):
+            frame[col]=pd.to_numeric(frame[col],errors='coerce')
+    return frame
+`;
+export const CUBE_PYTHON=DATASET_LOADER_PYTHON+String.raw`
 import hashlib
 _spec=json.loads(__SPEC__)
-_src=pd.read_excel(config['path'], sheet_name=config['sheet'] or 0) if config['isExcel'] else pd.read_csv(config['path'], sep=None, engine='python', encoding='utf-8-sig')
+_src=_load_dataset(config)
 _src.columns=_src.columns.map(str)
 if config.get('baseDeduplicated'): _src=_src.drop_duplicates().copy()
 def _series(frame,col):
     return frame[col] if col else pd.Series('',index=frame.index)
+def _category_text(v):
+    return '' if pd.isna(v) else str(int(v)) if isinstance(v,(float,np.floating)) and np.isfinite(v) and float(v).is_integer() else str(v)
 def _text(series):
-    return series.fillna('').astype(str)
+    return series.map(_category_text)
 def _metric_frame(frame,metric):
     mask=pd.Series(True,index=frame.index)
     for rule in metric['rules']:
@@ -71,7 +85,7 @@ for _dedup in [False,True]:
                         segment=segment.sample(1000,random_state=42)
                         if j not in variant['sampledCharts']: variant['sampledCharts'].append(j)
                     for _,row in segment.iterrows():
-                        variant['observations'].append([row[base[0]],row[base[1]],j,str(row[chart['groupBy']]) if pd.notna(row[chart['groupBy']]) else '(missing)',float(row['__x__']),float(row['__y__'])])
+                        variant['observations'].append([row[base[0]],row[base[1]],j,_category_text(row[chart['groupBy']]) or '(missing)',float(row['__x__']),float(row['__y__'])])
                 continue
             if chart.get('view')=='histogram':
                 assert metric['operation']=='count', 'Histogram requires count metric'
@@ -87,7 +101,7 @@ for _dedup in [False,True]:
                         segment=segment.sample(1000,random_state=42)
                         if j not in variant['sampledCharts']: variant['sampledCharts'].append(j)
                     for _,row in segment.iterrows():
-                        variant['observations'].append([row[base[0]],row[base[1]],j,str(row[chart['groupBy']]) if pd.notna(row[chart['groupBy']]) else '(missing)',float(row['__x__']),0.0])
+                        variant['observations'].append([row[base[0]],row[base[1]],j,_category_text(row[chart['groupBy']]) or '(missing)',float(row['__x__']),0.0])
                 positions=np.clip(np.searchsorted(edges,numbers.loc[part.index],side='right')-1,0,len(edges)-2)
                 part['__group__']=[format(edges[k],'.8g')+' — '+format(edges[k+1],'.8g') for k in positions]
             else:

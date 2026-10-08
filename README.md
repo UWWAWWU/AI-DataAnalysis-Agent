@@ -151,3 +151,9 @@ Interactive HTML exports contain the dashboard aggregates needed for all support
 The agent can choose a `python` tool when built-in investigations are insufficient. It writes Python against a private copy of the active dataset selection, runs it in a disposable E2B sandbox with internet access disabled and a 60-second execution timeout, and receives structured numeric evidence or an error to correct. No provider credentials are injected into the sandbox. Each run is terminated after execution; modifications inside it do not replace the workspace dataset. Source changes still require Apply changes.
 
 Computed custom metrics can ground the final brief. Their statistical methodology remains the model’s responsibility: finite-number validation does not establish that an analysis is appropriate. Dashboard rendering continues through the validated dashboard specification using existing dataset columns; arbitrary Python plots and derived-column dashboards are not yet supported.
+
+### Diverse dataset regression corpus
+
+`node scripts/check-diverse-agent-corpus.mjs --generate --local` generates 60 synthetic CSV/XLSX fixtures across ten domains and edge cases (including 100,000 rows). It independently compares Python-prepared dashboard KPIs and active filters with a separate Pandas calculation. Fixtures contain no private data. `node scripts/check-diverse-agent-corpus.mjs --live` additionally exercises 50 iterative agents through the deployed API, real E2B execution and grounded briefs using existing server-side credentials; it runs three concurrent streams and may consume provider quota. Results are stored under `.tmp/diverse-agent-corpus`, or `CORPUS_DIR`. No secrets are read by the test runner.
+
+`node scripts/check-python-category-codes.mjs` verifies that Python preserves leading-zero category codes and identifiers, literal NA categories, numeric measures and matching active filters.

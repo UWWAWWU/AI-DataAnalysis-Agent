@@ -1,3 +1,4 @@
+import {DATASET_LOADER_PYTHON} from './dashboard-python';
 export type PythonEvidence={method:string;metrics:{label:string;value:number}[];limitations:string[];rows:number};
 export function validatePythonEvidence(value:unknown,rows:number):PythonEvidence {
  const r=value as PythonEvidence;
@@ -7,13 +8,14 @@ export function validatePythonEvidence(value:unknown,rows:number):PythonEvidence
 export function pythonAnalysisProgram(config:unknown,code:string){return `import pandas as pd, numpy as np, json, os
 _config=json.loads(${JSON.stringify(JSON.stringify(config))})
 assert 0 < os.path.getsize(_config['path']) <= 40*1024*1024, 'Invalid dataset size'
-_source=pd.read_excel(_config['path'],sheet_name=_config['sheet'] or 0) if _config['isExcel'] else pd.read_csv(_config['path'],sep=None,engine='python',encoding='utf-8-sig')
+${DATASET_LOADER_PYTHON}
+_source=_load_dataset(_config)
 _source.columns=_source.columns.map(str)
 _f=_config['selection']; _spec=_config.get('dashboard') or {}
 if _config.get('baseDeduplicated') or _f.get('deduplicate'): _source=_source.drop_duplicates()
 if _f.get('country'):
     assert _spec.get('countryColumn'), 'Active country selection requires a country column'
-    _source=_source.loc[_source[_spec['countryColumn']].fillna('').astype(str)==_f['country']]
+    _source=_source.loc[_source[_spec['countryColumn']].map(lambda v: '' if pd.isna(v) else str(int(v)) if isinstance(v,(float,np.floating)) and np.isfinite(v) and float(v).is_integer() else str(v))==_f['country']]
 if _f.get('from') or _f.get('to'):
     assert _spec.get('dateColumn'), 'Active date selection requires a date column'
     _months=pd.to_datetime(_source[_spec['dateColumn']],errors='coerce').dt.strftime('%Y-%m').fillna('')
