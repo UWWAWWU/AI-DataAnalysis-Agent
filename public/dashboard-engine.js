@@ -91,6 +91,8 @@ export function validateSpec(v, columns, numericColumns) {
             throw Error('yColumn must refer to a numeric source column.');
         if (c.view === 'histogram' && s.metrics.find(m => m.id === c.metric)?.operation !== 'count')
             throw Error('Histogram requires a count metric.');
+        if (c.view !== 'histogram')
+            delete c.bins;
         if (c.bins !== undefined && (!Number.isInteger(c.bins) || c.bins < 2 || c.bins > 50))
             throw Error('Invalid histogram bins.');
     }
