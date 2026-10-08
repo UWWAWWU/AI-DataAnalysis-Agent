@@ -17,3 +17,4 @@ assert.equal(replyLanguage('Ubah grafik. Answer in English.','id'),'en');
 
 assert.equal(replyLanguage('Tambahkan satu grafik batang rata-rata tip berdasarkan smoker. Pertahankan semua grafik dan KPI yang sudah ada.','en'),'id');
 const ui=fs.readFileSync('app/analyst.tsx','utf8');assert.match(ui,/responseLanguage=replyLanguage\(q,locale\);requestLanguage.current=responseLanguage/);assert.doesNotMatch(ui,/const responseLanguage=locale/);
+assert.doesNotMatch(ui,/lt\(m\.text\)/,'Conversation text must retain the requested language rather than being retranslated to UI locale');
