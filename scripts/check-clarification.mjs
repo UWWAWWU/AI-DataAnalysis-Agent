@@ -10,13 +10,4 @@ const plan={title:'Bike sharing',objective:'Explore demand',code:'# Trusted engi
 assert.deepEqual(executablePlan(validatePlan(plan)).questions,[]);
 assert.deepEqual(plan.questions,questions);
 assert.deepEqual(executablePlan(plan,true).questions,questions);
-const source=fs.readFileSync('app/analyst.tsx','utf8');
-const fn=source.slice(source.indexOf('    async function prepare('),source.indexOf('    async function execute('));
-async function check(objective,answer,shouldExecute){let executed=false,chatOpened=false,saved=null,allow;
- const no=()=>{};const context={profile:{},filter:{},localRef:{current:null},goal:'',plan:null,setStage:no,setStatus:no,setError:no,setPendingInsight:no,setChatOpen:value=>{chatOpened=value},setPlan:value=>{saved=value},validatePlan,executablePlan,readableInitialPlan,ai:async(...args)=>{allow=args[7];return {plan}},execute:async()=>{executed=true;return true}};
- const prepare=new Function(...Object.keys(context),compile(fn)+';return prepare;')(...Object.values(context));
- const completed=await prepare({}, {}, null, answer, objective);
- assert.equal(executed,shouldExecute);assert.equal(allow,!shouldExecute);assert.equal(chatOpened,!shouldExecute);assert.equal(completed,shouldExecute?true:null);assert.equal(saved.questions.length,shouldExecute?0:3);
-}
-await check('','',true);await check('Define demand risk','',false);await check('Define demand risk','Use the available definitions.',true);await check('Add a chart','Requested change: Add a chart',true);
-console.log('Automatic exploration ignores research questions, explicit requests retain clarification, and supplied answers proceed without a clarification loop.');
+console.log('Legacy plan research questions remain optional; essential clarification and continuation are exercised by check-analysis-agent.mjs.');

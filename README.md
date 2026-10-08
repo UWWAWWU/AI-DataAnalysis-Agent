@@ -14,11 +14,11 @@ An intelligent workspace that turns CSV and Excel files into interactive dashboa
 
 ## Overview
 
-AI Data Analysis Agent helps people explore a dataset without starting from a blank notebook or building a dashboard manually. Upload a file, let the agent examine its structure and propose a suitable analysis, then explore the resulting metrics and visualizations.
+AI Data Analysis Agent helps people explore a dataset without starting from a blank notebook or building a dashboard manually. Upload a file, let the agent investigate the data, evaluate evidence and build a suitable analysis, then explore the resulting metrics and visualizations.
 
 The dashboard adapts to the uploaded data. A retail dataset can reveal sales trends and market performance; a different dataset can produce a different set of metrics and charts based on its available columns.
 
-The project combines language models for analysis planning and explanations, Python for calculations, and a browser-based dashboard for interactive exploration.
+The project combines language models for iterative analytical decisions and explanations, Python for calculations, and a browser-based dashboard for interactive exploration.
 
 ## What you can do
 
@@ -33,41 +33,43 @@ The project combines language models for analysis planning and explanations, Pyt
 | **Data Review** | Preview rows requested through the AI assistant, including exact duplicates. |
 | **Controlled cleaning** | Review proposed duplicate removal and apply it when you are ready to update the dashboard. |
 | **Report exports** | Download a self-contained HTML dashboard with offline filters, tooltips and zoom, a single-page 16:9 PDF matching the canvas, cleaned CSV, or JSON analysis results. |
-| **Session recovery** | Refresh the same tab to restore data, dashboard, filters, chat and visual settings. A new tab starts a fresh session. Completed dashboards remain usable offline after the workspace has been cached. |
+| **Session recovery** | Refresh the same tab to restore data, dashboard, filters, chat and visual settings. Agent decisions and tool reports are checkpointed; interrupted investigations can be continued. A new tab starts a fresh session. Completed dashboards remain usable offline after the workspace has been cached. |
 | **Two languages** | Use English or Indonesian for the interface and analysis explanations. |
 
 ## From upload to insight
 
 1. **Upload your dataset.** Select a CSV or XLSX file, up to 40 MB.
 2. **Understand its structure.** The workspace profiles the columns, completeness, and duplicate rows.
-3. **Let the agent plan.** AI proposes metrics and charts using the available columns. When a definition needs clarification, it asks a question.
+3. **Let the agent investigate.** AI chooses quality checks, descriptive statistics, grouped aggregations, distributions or correlations, reads their results and chooses the next action. It asks only when an essential requested business definition is missing.
 4. **Calculate the results.** A validated dashboard specification runs through trusted Python code in an isolated sandbox.
-5. **Explore the dashboard.** Review KPIs, visualizations, and an analysis brief; change supported filters without rerunning the AI.
+5. **Evaluate the evidence.** The agent inspects the computed dashboard and can investigate further or revise it before declaring the goal answered. Explore KPIs, visualizations and a grounded analysis brief.
 6. **Continue the analysis.** Use the AI assistant to add a chart, explain a result, or inspect data before applying a change.
 
 ## The agent architecture
 
 ```mermaid
 flowchart TD
-    U["CSV or XLSX upload"] --> P["Data profiling"]
-    P --> A["AI analysis planning"]
-    A --> V["Specification validation"]
-    V --> S["Isolated Python calculation"]
-    S --> D["Interactive dashboard"]
-    D --> C["AI conversation"]
-    C --> A
-    C --> R["Data Review"]
-    R --> X["Apply approved cleaning"]
-    X --> A
+    P["Dataset profile and user goal"] --> A["AI chooses the next action"]
+    A --> T["Read-only investigation tools"]
+    A --> S["Validated Python dashboard"]
+    T --> E["Computed evidence and errors"]
+    S --> E
+    E --> A
+    A --> F["Goal answered with evidence"]
+    A --> R["Essential clarification"]
 ```
 
 ### Planning
 
-Language models interpret the dataset summary and the user's request to propose an analysis. Plans use the supplied column names and pass through structural validation before execution.
+Language models choose a next action from the profile, user goal, prior tool results and execution errors. Decisions are validated against existing columns and allowed read-only tools. The loop continues after a dashboard is computed; completion requires references to successful investigation evidence and the latest dashboard result. An expandable Analysis activity section shows actual actions and outcomes.
+
+### Recovery and execution budgets
+
+Every decision is saved before execution and every result is saved afterwards, separately from the dashboard session. Refreshing the same tab retains the investigations and provides Continue analysis. A run is scoped to its dataset and filter selection. Approved source changes invalidate old evidence. An eight-minute active-run timeout or 24-action budget pauses the work as incomplete; continuation preserves evidence and starts a new execution allowance. Closing the tab does not run a background agent. Model outages also retain the checkpoint instead of marking the goal complete.
 
 ### Calculation
 
-Python, Pandas, and NumPy calculate the dashboard's aggregates inside an isolated E2B sandbox. The computation uses trusted application code driven by the validated specification.
+Python, Pandas, and NumPy calculate the dashboard's aggregates inside an isolated E2B sandbox. The computation uses trusted application code driven by the validated specification. Read-only EDA tools run in the dataset worker; source edits remain staged until Apply changes. Pearson correlation is descriptive, not evidence of causation. IQR candidates are not automatically deleted.
 
 ### Explanation
 

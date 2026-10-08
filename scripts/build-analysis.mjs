@@ -16,4 +16,5 @@ await fs.writeFile("public/presentation-engine.js",ts.transpileModule(await fs.r
 await fs.writeFile('public/preparation-engine.js',ts.transpileModule(await fs.readFile('lib/data-preparation.ts','utf8'),{compilerOptions:{module:ts.ModuleKind.ESNext,target:ts.ScriptTarget.ES2022}}).outputText);
 
 await fs.writeFile('public/session-store.js',ts.transpileModule(await fs.readFile('lib/session-store.ts','utf8'),{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.ES2022}}).outputText);
+await fs.writeFile('public/agent-tools.js',ts.transpileModule(await fs.readFile('lib/agent-tools.ts','utf8'),{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.ESNext}}).outputText);
 await import('./build-interactive.mjs');
