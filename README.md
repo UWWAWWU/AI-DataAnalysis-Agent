@@ -40,7 +40,7 @@ The project combines language models for iterative analytical decisions and expl
 
 1. **Upload your dataset.** Select a CSV or XLSX file, up to 40 MB.
 2. **Understand its structure.** The workspace profiles the columns, completeness, and duplicate rows.
-3. **Let the agent investigate.** AI chooses quality checks, descriptive statistics, grouped aggregations, distributions or correlations, reads their results and chooses the next action. It asks only when an essential requested business definition is missing.
+3. **Let the agent investigate.** AI chooses quality checks, descriptive statistics, grouped aggregations, distributions, correlations or custom Python investigations, reads their results and chooses the next action. It asks only when an essential requested business definition is missing.
 4. **Calculate the results.** A validated dashboard specification runs through trusted Python code in an isolated sandbox.
 5. **Evaluate the evidence.** The agent inspects the computed dashboard and can investigate further or revise it before declaring the goal answered. Explore KPIs, visualizations and a grounded analysis brief.
 6. **Continue the analysis.** Use the AI assistant to add a chart, explain a result, or inspect data before applying a change.
@@ -69,7 +69,7 @@ Every decision is saved before execution and every result is saved afterwards, s
 
 ### Calculation
 
-Python, Pandas, and NumPy calculate the dashboard's aggregates inside an isolated E2B sandbox. The computation uses trusted application code driven by the validated specification. Read-only EDA tools run in the dataset worker; source edits remain staged until Apply changes. Pearson correlation is descriptive, not evidence of causation. IQR candidates are not automatically deleted.
+Python, Pandas, and NumPy calculate the dashboard's aggregates inside an isolated E2B sandbox. The computation uses trusted application code driven by the validated specification. Built-in read-only EDA tools run in the dataset worker; custom AI-written Python runs in a separate disposable E2B sandbox; source edits remain staged until Apply changes. Pearson correlation is descriptive, not evidence of causation. IQR candidates are not automatically deleted.
 
 ### Explanation
 
@@ -145,3 +145,9 @@ AI chooses charts and their initial positions on a single dashboard canvas. Arra
 Upload prepares unambiguous numeric values and surrounding whitespace while preserving identifiers, leading-zero codes and ambiguous dates. Original data remains downloadable. AI Requested Data lists exact duplicates, missing values and IQR outlier flags, affected-row previews and expected row counts. Removal and numeric mean/median imputation are staged for review, and affect the dashboard only after Apply changes. Outlier flags are not evidence of invalid records. Exact KPI impacts are computed after application.
 
 Interactive HTML exports contain the dashboard aggregates needed for all supported filter selections. AI chat and new Python analyses remain available in the online application. Session recovery stores working data locally in the browser, scoped to the current tab; it does not upload a backup to a server.
+
+### Custom Python investigations
+
+The agent can choose a `python` tool when built-in investigations are insufficient. It writes Python against a private copy of the active dataset selection, runs it in a disposable E2B sandbox with internet access disabled and a 60-second execution timeout, and receives structured numeric evidence or an error to correct. No provider credentials are injected into the sandbox. Each run is terminated after execution; modifications inside it do not replace the workspace dataset. Source changes still require Apply changes.
+
+Computed custom metrics can ground the final brief. Their statistical methodology remains the model’s responsibility: finite-number validation does not establish that an analysis is appropriate. Dashboard rendering continues through the validated dashboard specification using existing dataset columns; arbitrary Python plots and derived-column dashboards are not yet supported.

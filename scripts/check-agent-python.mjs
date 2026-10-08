@@ -1,0 +1,22 @@
+import ts from 'typescript';import fs from 'node:fs';import path from 'node:path';import assert from 'node:assert/strict';import {createRequire} from 'node:module';import {spawnSync} from 'node:child_process';import os from 'node:os';
+const native=createRequire(import.meta.url),cache=new Map();let killed=0,executionCode='',fail=false;
+const sandbox={runCode:async(code,opts)=>{executionCode=code;assert.equal(opts.timeoutMs,60000);return fail?{error:{name:'ValueError',value:'Correct this analysis'}}:{logs:{stdout:['__AGENT_RESULT__'+JSON.stringify({rows:2,result:{method:'Mean',metrics:[{label:'mean value',value:4}],limitations:[]}})]}}},kill:async()=>{killed++}};
+function load(file){const abs=path.resolve(file);if(cache.has(abs))return cache.get(abs);const out={};cache.set(abs,out);new Function('require','exports',ts.transpileModule(fs.readFileSync(abs,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022,esModuleInterop:true}}).outputText)(name=>name==='@e2b/code-interpreter'?{Sandbox:{connect:async()=>sandbox}}:name.startsWith('@/')?load(name.slice(2)+'.ts'):name.startsWith('.')?load(path.resolve(path.dirname(abs),name+'.ts')):native(name),out);return out}
+const {pythonAnalysisProgram,validatePythonEvidence}=load('lib/agent-python.ts');const {validateAgentDecision}=load('lib/analysis-agent.ts');const {agentEvidenceFacts}=load('lib/agent-evidence.ts');
+assert.equal(validateAgentDecision({action:'tool',purpose:'Test special analysis',tool:{name:'python',code:'result = {}'}},['value']).tool.name,'python');
+assert.throws(()=>validatePythonEvidence({method:'Bad',metrics:[{label:'bad',value:Infinity}],limitations:[]},3));assert.throws(()=>validatePythonEvidence({method:'Bad',metrics:[],limitations:[]},3));
+const dir=fs.mkdtempSync(path.join(os.tmpdir(),'agent-python-'));try{
+const input=path.join(dir,'input.csv');const csv='Region,Date,value\nNorth,2026-01-01,2\nNorth,2026-01-01,2\nNorth,2026-02-01,6\nSouth,2026-01-01,100\n';fs.writeFileSync(input,csv);
+const code="result={'method':'Sum of selected values','metrics':[{'label':'selected sum','value':float(df['value'].sum())}],'limitations':['Rows outside active selection excluded']}";
+const program=pythonAnalysisProgram({path:input,isExcel:false,sheet:'',selection:{country:'North',from:'2026-01',to:'2026-01',deduplicate:true},dashboard:{countryColumn:'Region',dateColumn:'Date'}},code);
+const r=spawnSync('python3',['-c',program],{encoding:'utf8'});assert.equal(r.status,0,r.stderr);const output=JSON.parse(r.stdout.trim().slice('__AGENT_RESULT__'.length));assert.equal(output.rows,1);assert.equal(output.result.metrics[0].value,2);assert.equal(fs.readFileSync(input,'utf8'),csv);
+const bad=spawnSync('python3',['-c',pythonAnalysisProgram({path:input,isExcel:false,sheet:'',selection:{}},'raise ValueError("analysis error")')],{encoding:'utf8'});assert.notEqual(bad.status,0);assert.match(bad.stderr,/analysis error/);
+}finally{fs.rmSync(dir,{recursive:true,force:true})}
+const previous=process.env.E2B_API_KEY;process.env.E2B_API_KEY='test-only-placeholder';try{
+const {issueTicket}=load('lib/sandbox-ticket.ts'),{POST}=load('app/api/python/analysis/route.ts');const ticket=issueTicket({id:'test',path:'/home/user/input.csv',isExcel:false,expires:Date.now()+100000});
+const send=()=>POST(new Request('http://localhost/api/python/analysis',{method:'POST',headers:{origin:'http://localhost'},body:JSON.stringify({ticket,code:'result={}',selection:{}})}));
+let response=await send();assert.equal(response.status,200);const evidence=(await response.json()).result;assert.equal(evidence.rows,2);assert.equal(killed,1);assert.match(executionCode,/private|copy\(deep=True\)/);assert.equal(agentEvidenceFacts({reports:[{id:'e1',kind:'tool',tool:{name:'python'},ok:true,result:evidence}]}).length,1);
+fail=true;response=await send();assert.equal(response.status,422);assert.match((await response.json()).error,/Correct this analysis/);assert.equal(killed,2);
+response=await POST(new Request('http://localhost/api/python/analysis',{method:'POST',headers:{origin:'http://invalid'},body:'{}'}));assert.equal(response.status,422);assert.equal(killed,2);
+}finally{if(previous===undefined)delete process.env.E2B_API_KEY;else process.env.E2B_API_KEY=previous}
+console.log('Custom Python: actual pandas filters/dedup and numeric results, immutable source, error propagation, finite evidence, agent validation, grounded facts and isolated route cleanup passed. Remote E2B execution mocked.');

@@ -1,7 +1,9 @@
 export function validateAgentTool(value, names) {
     const t = value;
-    if (!t || !['quality', 'describe', 'aggregate', 'correlation', 'distribution'].includes(t.name))
+    if (!t || !['quality', 'describe', 'aggregate', 'correlation', 'distribution', 'python'].includes(t.name))
         throw Error('Unsupported analysis tool.');
+    if (t.name === 'python' && (typeof t.code !== 'string' || !t.code.trim() || t.code.length > 20000))
+        throw Error('Python analysis needs code up to 20000 characters.');
     if (t.columns !== undefined && (!Array.isArray(t.columns) || t.columns.length > 12 || t.columns.some(c => !names.includes(c))))
         throw Error('Unknown analysis column.');
     if (t.groupBy && !names.includes(t.groupBy))
@@ -23,6 +25,8 @@ export function validateAgentTool(value, names) {
 const number = (v) => v == null || v === '' || v instanceof Date ? null : typeof v === 'number' && Number.isFinite(v) ? v : null;
 const quantile = (a, p) => { const i = (a.length - 1) * p, l = Math.floor(i); return a[l] + (a[Math.ceil(i)] - a[l]) * (i - l); };
 export function runAgentTool(rows, input) {
+    if (input.name === 'python')
+        throw Error('Python must execute in the isolated server sandbox.');
     const names = Object.keys(rows[0] || {}), t = validateAgentTool(input, names), columns = t.columns || names;
     if (t.name === 'quality') {
         const seen = new Set();

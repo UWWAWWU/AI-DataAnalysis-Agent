@@ -201,7 +201,20 @@ export default function Analyst() {
                     const response=await ai('agent',run.goal,p,f,computedResult.current,computedPlan.current||undefined,undefined,false,context,controller.signal);
                     return validateAgentDecision(response.decision,p.columns.map(c=>c.name),run);
                 },
-                tool:async tool=>{setStage('planning');setStatus('Running data investigation: '+tool.name+'.');return await call('agentTool',{tool,filter:f,spec:computedPlan.current?.dashboard||initial.plan?.dashboard},controller.signal);},
+                tool:async tool=>{
+                    setStage('planning');setStatus('Running data investigation: '+tool.name+'.');
+                    if(tool.name!=='python')return await call('agentTool',{tool,filter:f,spec:computedPlan.current?.dashboard||initial.plan?.dashboard},controller.signal);
+                    if(!file.current)throw Error('The dataset file is unavailable. Upload it again to run Python.');
+                    const uploadResponse=await fetch('/api/python/upload',{method:'POST',headers:{'Content-Type':'application/json'},signal:controller.signal,body:JSON.stringify({name:file.current.name,size:file.current.size})});
+                    const upload=await readResponse(uploadResponse);if(!uploadResponse.ok)throw Error(upload.error||'Could not prepare Python analysis.');
+                    try{
+                        const form=new FormData();form.append('file',file.current);
+                        const transfer=await fetch(upload.uploadUrl,{method:'POST',body:form,signal:controller.signal});
+                        if(!transfer.ok)throw Error('Could not transfer the dataset for Python analysis.');
+                        const response=await fetch('/api/python/analysis',{method:'POST',headers:{'Content-Type':'application/json'},signal:controller.signal,body:JSON.stringify({ticket:upload.ticket,code:tool.code,selection:f,dashboard:computedPlan.current?.dashboard||initial.plan?.dashboard,sheet:sheetRef.current,baseDeduplicated:baseDeduplicated.current})});
+                        const evidence=await readResponse(response);if(!response.ok)throw Error(evidence.error||'Python analysis failed.');return evidence.result;
+                    }finally{void fetch('/api/python',{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({ticket:upload.ticket})}).catch(()=>{});}
+                },
                 dashboard:async next=>{
                     next.dashboard.categoryLabels=p.categoryLabels;
                     if(answer.startsWith('Requested change:')&&plan&&/\b(add|another|additional)\b|tambah|baru|new (?:chart|plot)|more (?:chart|plot)/i.test(objective+' '+answer)){

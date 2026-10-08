@@ -1,7 +1,8 @@
 import type {Row} from './analysis';
-export type AgentTool={name:'quality'|'describe'|'aggregate'|'correlation'|'distribution';columns?:string[];groupBy?:string;operation?:'sum'|'mean'|'count'|'distinct';bins?:number};
+export type AgentTool={name:'quality'|'describe'|'aggregate'|'correlation'|'distribution'|'python';code?:string;columns?:string[];groupBy?:string;operation?:'sum'|'mean'|'count'|'distinct';bins?:number};
 export function validateAgentTool(value:unknown,names:string[]):AgentTool{
- const t=value as AgentTool;if(!t||!['quality','describe','aggregate','correlation','distribution'].includes(t.name))throw Error('Unsupported analysis tool.');
+ const t=value as AgentTool;if(!t||!['quality','describe','aggregate','correlation','distribution','python'].includes(t.name))throw Error('Unsupported analysis tool.');
+ if(t.name==='python'&&(typeof t.code!=='string'||!t.code.trim()||t.code.length>20000))throw Error('Python analysis needs code up to 20000 characters.');
  if(t.columns!==undefined&&(!Array.isArray(t.columns)||t.columns.length>12||t.columns.some(c=>!names.includes(c))))throw Error('Unknown analysis column.');
  if(t.groupBy&&!names.includes(t.groupBy))throw Error('Unknown grouping column.');
  if(t.name==='aggregate'&&(!t.groupBy||!['sum','mean','count','distinct'].includes(t.operation||'')))throw Error('Aggregation needs a group and operation.');
@@ -15,6 +16,7 @@ export function validateAgentTool(value:unknown,names:string[]):AgentTool{
 const number=(v:unknown)=>v==null||v===''||v instanceof Date?null:typeof v==='number'&&Number.isFinite(v)?v:null;
 const quantile=(a:number[],p:number)=>{const i=(a.length-1)*p,l=Math.floor(i);return a[l]+(a[Math.ceil(i)]-a[l])*(i-l)};
 export function runAgentTool(rows:Row[],input:AgentTool){
+ if(input.name==='python')throw Error('Python must execute in the isolated server sandbox.');
  const names=Object.keys(rows[0]||{}),t=validateAgentTool(input,names),columns=t.columns||names;
  if(t.name==='quality'){
   const seen=new Set<string>();let duplicates=0;for(const r of rows){const key=JSON.stringify(names.map(c=>r[c]??null));if(seen.has(key))duplicates++;seen.add(key)}
