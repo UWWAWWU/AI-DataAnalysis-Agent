@@ -6,7 +6,7 @@ def _load_dataset(settings):
     for col in frame.columns:
         frame[col]=frame[col].map(lambda v: v.strip() if isinstance(v,str) else v)
         values=[v for v in frame[col] if not pd.isna(v) and v!='']
-        if values and not re.search(r'(?:id|code|phone|zip|postal|invoice)$|invoice',col,re.I) and all(isinstance(v,(int,float,np.number)) and np.isfinite(v) or isinstance(v,str) and re.fullmatch(r'[+-]?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?',v) and np.isfinite(float(v)) for v in values):
+        if values and not re.search(r'(?:id|code|phone|zip|postal|invoice)$|invoice',col,re.I) and all(isinstance(v,(int,float,np.number)) and np.isfinite(v) or isinstance(v,str) and re.fullmatch(r'[+-]?(?:0|[1-9]\d*)(?:\.\d+)?',v) and np.isfinite(float(v)) for v in values):
             frame[col]=pd.to_numeric(frame[col],errors='coerce')
     return frame
 `;
@@ -19,7 +19,7 @@ if config.get('baseDeduplicated'): _src=_src.drop_duplicates().copy()
 def _series(frame,col):
     return frame[col] if col else pd.Series('',index=frame.index)
 def _category_text(v):
-    return '' if pd.isna(v) else str(int(v)) if isinstance(v,(float,np.floating)) and np.isfinite(v) and float(v).is_integer() else str(v)
+    return '' if pd.isna(v) else str(v).lower() if isinstance(v,(bool,np.bool_)) else str(int(v)) if isinstance(v,(float,np.floating)) and np.isfinite(v) and float(v).is_integer() else str(v)
 def _text(series):
     return series.map(_category_text)
 def _metric_frame(frame,metric):

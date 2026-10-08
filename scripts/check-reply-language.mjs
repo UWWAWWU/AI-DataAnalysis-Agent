@@ -14,3 +14,6 @@ assert.equal(replyLanguage('Tampilkan baris yang identik pada seluruh kolom. Jan
 assert.equal(replyLanguage('Ubah hanya grafik tren bulanan menjadi line chart','en'),'id');
 assert.equal(replyLanguage('Show duplicate rows. Do not delete yet.','id'),'en');
 assert.equal(replyLanguage('Ubah grafik. Answer in English.','id'),'en');
+
+assert.equal(replyLanguage('Tambahkan satu grafik batang rata-rata tip berdasarkan smoker. Pertahankan semua grafik dan KPI yang sudah ada.','en'),'id');
+const ui=fs.readFileSync('app/analyst.tsx','utf8');assert.match(ui,/responseLanguage=replyLanguage\(q,locale\);requestLanguage.current=responseLanguage/);assert.doesNotMatch(ui,/const responseLanguage=locale/);

@@ -15,7 +15,7 @@ _f=_config['selection']; _spec=_config.get('dashboard') or {}
 if _config.get('baseDeduplicated') or _f.get('deduplicate'): _source=_source.drop_duplicates()
 if _f.get('country'):
     assert _spec.get('countryColumn'), 'Active country selection requires a country column'
-    _source=_source.loc[_source[_spec['countryColumn']].map(lambda v: '' if pd.isna(v) else str(int(v)) if isinstance(v,(float,np.floating)) and np.isfinite(v) and float(v).is_integer() else str(v))==_f['country']]
+    _source=_source.loc[_source[_spec['countryColumn']].map(lambda v: '' if pd.isna(v) else str(v).lower() if isinstance(v,(bool,np.bool_)) else str(int(v)) if isinstance(v,(float,np.floating)) and np.isfinite(v) and float(v).is_integer() else str(v))==_f['country']]
 if _f.get('from') or _f.get('to'):
     assert _spec.get('dateColumn'), 'Active date selection requires a date column'
     _months=pd.to_datetime(_source[_spec['dateColumn']],errors='coerce').dt.strftime('%Y-%m').fillna('')

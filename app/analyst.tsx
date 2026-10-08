@@ -1,6 +1,7 @@
 'use client';
 import {runAnalysisAgent,validateAgentDecision,restoreAgentRun,type AgentRun} from '@/lib/analysis-agent';
 import {reviseDashboard,appendDashboard,validateFilterChange} from '@/lib/dashboard-actions';
+import {replyLanguage} from '@/lib/reply-language';
 import {aiContextReplacer} from '@/lib/ai-summary';
 import {categoryName,type CategoryDictionary} from '@/lib/category-labels';
 import {DashboardCanvas} from '@/components/dashboard-canvas';
@@ -318,10 +319,10 @@ export default function Analyst() {
     async function discardReview(){setReviewBusy(true);try{await call('reviewDiscard');setReviewData(null);setActiveCleaning(null)}catch(e){setError((e as Error).message)}finally{setReviewBusy(false)}}
     async function applyReview(){if((!reviewData?.pending&&!reviewData?.canApplyDuplicates)||busy||!profile)return;setReviewBusy(true);setError('');try{const ready=reviewData.canApplyDuplicates?await call('reviewStageDuplicates'):reviewData;setReviewData(ready);if(ready.dedupOnly&&cubeReady.current){const nextFilter={...filter,deduplicate:true};const applied=await call('reviewApplyDedup',{filter:nextFilter});baseDeduplicated.current=true;setProfile(applied.profile);setResult(applied.result);setFilter(nextFilter);setReviewData(null);await refreshPreparation();setBrief(null);setTab('dashboard');agentCurrent.current=null;setAgentRun(null);await writeSession(sessionId.current+':agent',null);setStatus('Changes applied to the dashboard.');return;}const prepared=await call('reviewPrepare');const previousFile=file.current,previousSheet=sheetRef.current,previousBase=baseDeduplicated.current;file.current=new File(['\ufeff'+prepared.csv],'reviewed-data.csv',{type:'text/csv'});sheetRef.current='';baseDeduplicated.current=false;let success=false;try{success=await execute(plan,prepared.profile,filter)}finally{if(!success){file.current=previousFile;sheetRef.current=previousSheet;baseDeduplicated.current=previousBase}}if(success){await call('sessionWorkingFile',{file:file.current,sheet:sheetRef.current});await call('reviewCommit');await refreshPreparation();setReviewData(null);setActiveCleaning(null);setBrief(null);setSheet('');setSheets([]);agentCurrent.current=null;setAgentRun(null);await writeSession(sessionId.current+':agent',null);setStatus('Changes applied to the dashboard.')}}catch(e){setError((e as Error).message)}finally{setReviewBusy(false)}}
     async function ask() { if (!question.trim() || busy)
-        return; const q = question; localization.remember([q],locale); setQuestion(''); setChatBusy(true); setMessages(m => [...m, { role: 'You', text: q }]); try {
+        return; const q = question;const responseLanguage=replyLanguage(q,locale);requestLanguage.current=responseLanguage; localization.remember([q],responseLanguage); setQuestion(''); setChatBusy(true); setMessages(m => [...m, { role: 'You', text: q }]); try {
         const r = await ai('chat', q);
         if(!['presentation','update','append','filter','revise'].includes(r.action))setMessages(m => [...m, { role: 'AI', text: r.answer }]);
-        const responseLanguage=locale;setChatReplyLanguage(responseLanguage);
+        setChatReplyLanguage(responseLanguage);
         if(r.action==='filter'&&plan&&profile){const changes=validateFilterChange(r.filterChanges,profile,plan.dashboard);if(!await apply({...filter,...changes},true))throw Error(responseLanguage==='id'?'Filter belum berhasil diterapkan.':'The filter could not be applied.');setBrief(null);setMessages(m=>[...m,{role:'AI',text:responseLanguage==='id'?'Filter diterapkan pada perhitungan KPI dan grafik.':'The selection has been applied to KPI and chart calculations.'}]);}
         else if(['append','revise'].includes(r.action)&&plan&&profile){setChatUpdating(true);try{const next={...plan,questions:[],dashboard:r.action==='revise'?reviseDashboard(plan.dashboard,r.targetChart,r.dashboardAddition,profile.columns.map(c=>c.name)):appendDashboard(plan.dashboard,r.dashboardAddition,profile.columns.map(c=>c.name))};if(await execute(next,profile,filter)){setPlan(next);setMessages(m=>[...m,{role:'AI',text:r.action==='revise'?(responseLanguage==='id'?'Grafik yang diminta diperbarui. KPI dan grafik lainnya dipertahankan.':'The requested chart was updated. KPIs and other charts are preserved.'):(responseLanguage==='id'?'Grafik ditambahkan. Seluruh KPI dan grafik sebelumnya dipertahankan.':'The chart was added. All previous KPIs and charts are preserved.')}]);}}finally{setChatUpdating(false);}}
         else if(r.action==='presentation'){const updated=await call('presentation',{patches:r.chartChanges,filter});setResult(updated.result);setTab('dashboard');if(r.chartChanges?.some((x:any)=>x.limit!==undefined))setBrief(null);setPlan(current=>current?{...current,dashboard:updated.spec}:current);const confirmation=responseLanguage==='id'?'Tampilan grafik yang diminta sudah diperbarui. KPI dan perhitungan lainnya tetap sama.':'The requested chart presentation has been updated. KPI values and other calculations are unchanged.';localization.remember([confirmation],responseLanguage);setMessages(m=>[...m,{role:'AI',text:confirmation}]);}
@@ -337,7 +338,7 @@ export default function Analyst() {
         setMessages(m => [...m, { role: 'Status', text: (e as Error).message }]);
     }
     finally {
-        setChatBusy(false);
+        requestLanguage.current=null;setChatBusy(false);
     } }
     async function retryInsight() { if (!result || busy)
         return; setChatBusy(true);setMessages(m=>m.filter(x=>x.role!=='Status')); try {
