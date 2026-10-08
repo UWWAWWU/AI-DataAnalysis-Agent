@@ -197,7 +197,7 @@ export default function Analyst() {
                 checkpoint:async run=>{agentCurrent.current=run;setAgentRun(run);await writeSession(sessionId.current+':agent',run);},
                 decide:async run=>{
                     setStage('planning');setStatus('The AI is evaluating evidence and choosing the next analysis.');
-                    const context={...run,reports:run.reports.map(report=>({...report,result:report.kind==='dashboard'?{rows:(report.result as any)?.rows,kpis:(report.result as any)?.kpis,charts:(report.result as any)?.charts?.map((c:Chart)=>({title:c.title,description:c.description,labels:c.labels.slice(0,20),values:c.values.slice(0,20),displayedCategories:c.labels.length,truncated:c.labels.length>20,aggregation:c.aggregation})),definitions:(report.result as any)?.definitions}:report.result}))};
+                    const context={...run,reports:run.reports.map(report=>({...report,result:report.kind==='dashboard'?{rows:(report.result as any)?.rows,kpis:(report.result as any)?.kpis,charts:(report.result as any)?.charts?.map((c:Chart)=>({title:c.title,description:c.description,labels:c.labels.slice(0,20),values:c.values.slice(0,20),displayedCategories:c.labels.length,truncated:c.labels.length>20,aggregation:c.aggregation,view:c.view,pointCount:c.points?.length,boxCount:c.boxes?.length,sampled:c.sampled})),definitions:(report.result as any)?.definitions}:report.result}))};
                     const response=await ai('agent',run.goal,p,f,computedResult.current,computedPlan.current||undefined,undefined,false,context,controller.signal);
                     return validateAgentDecision(response.decision,p.columns.map(c=>c.name),run);
                 },
