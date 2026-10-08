@@ -1,4 +1,4 @@
-export function validateSpec(v, columns) {
+export function validateSpec(v, columns, numericColumns) {
     const s = v;
     if (!s || typeof s !== 'object' || typeof s.countryColumn !== 'string' || typeof s.dateColumn !== 'string' || !Array.isArray(s.metrics) || !s.metrics.length || s.metrics.length > 64 || !Array.isArray(s.kpis) || s.kpis.length > 32 || !Array.isArray(s.charts) || s.charts.length > 24)
         throw Error('Dashboard needs filter column names, one to sixty-four metrics, up to thirty-two KPIs, and up to twenty-four charts.');
@@ -55,10 +55,10 @@ export function validateSpec(v, columns) {
             throw Error('Table metric IDs must reference existing metrics and use table view.');
         if (!c.xColumn && ['histogram', 'boxplot'].includes(c.view || '')) {
             const metric = s.metrics.find(m => m.id === c.metric);
-            if (metric?.columns.length === 1)
-                c.xColumn = metric.columns[0];
-            else if (c.view === 'histogram' && col(c.groupBy))
+            if (c.view === 'histogram' && col(c.groupBy))
                 c.xColumn = c.groupBy;
+            else if (metric?.columns.length === 1)
+                c.xColumn = metric.columns[0];
         }
         if (c.position && (!['x', 'y', 'w', 'h', 'page'].every(k => Number.isInteger(c.position[k])) || c.position.x < 0 || c.position.y < 0 || c.position.w < 3 || c.position.h < 3 || c.position.x + c.position.w > 12 || c.position.y + c.position.h > 10000 || c.position.page < 0 || c.position.page > 99))
             delete c.position;
@@ -66,6 +66,10 @@ export function validateSpec(v, columns) {
             throw Error(`Chart "${c.title}" (${c.view}) needs xColumn naming an existing numeric column.`);
         if (c.view === 'scatter' && (!c.yColumn || !col(c.yColumn)))
             throw Error(`Chart "${c.title}" (${c.view}) needs yColumn naming an existing numeric column.`);
+        if (numericColumns && ['histogram', 'scatter', 'boxplot'].includes(c.view || '') && !numericColumns.includes(c.xColumn))
+            throw Error('xColumn must refer to a numeric source column.');
+        if (numericColumns && c.view === 'scatter' && !numericColumns.includes(c.yColumn))
+            throw Error('yColumn must refer to a numeric source column.');
         if (c.view === 'histogram' && s.metrics.find(m => m.id === c.metric)?.operation !== 'count')
             throw Error('Histogram requires a count metric.');
         if (c.bins !== undefined && (!Number.isInteger(c.bins) || c.bins < 2 || c.bins > 50))

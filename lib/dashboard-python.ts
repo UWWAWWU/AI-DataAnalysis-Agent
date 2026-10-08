@@ -15,6 +15,14 @@ import hashlib
 _spec=json.loads(__SPEC__)
 _src=_load_dataset(config)
 _src.columns=_src.columns.map(str)
+for _chart in _spec['charts']:
+    for _axis in (['xColumn','yColumn'] if _chart.get('view')=='scatter' else ['xColumn'] if _chart.get('view') in ['histogram','boxplot'] else []):
+        _raw=_src[_chart[_axis]]
+        _present=_raw.notna() & (_raw.map(str)!='')
+        _numeric=pd.to_numeric(_raw,errors='coerce')
+        if _present.any() and not np.isfinite(_numeric).any():
+            raise ValueError('Numeric chart axes require numeric source values; correct '+_axis)
+
 if config.get('baseDeduplicated'): _src=_src.drop_duplicates().copy()
 def _series(frame,col):
     return frame[col] if col else pd.Series('',index=frame.index)
