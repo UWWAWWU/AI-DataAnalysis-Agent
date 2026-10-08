@@ -11,6 +11,7 @@ assert.throws(()=>review.validateReview({...plan,selection:{kind:'rows',rules:[]
 assert.throws(()=>review.validateReview({...plan,selection:{kind:'rows',rules:[{column:'Unknown',op:'eq',value:1}]}},['Country']));
 let output;const self={postMessage:x=>{output=x}};
 let source=fs.readFileSync('public/data-worker.js','utf8').replaceAll("'/engine.js'",JSON.stringify(pathToFileURL(process.cwd()+'/public/engine.js').href)).replaceAll("'/dashboard-engine.js'",JSON.stringify(pathToFileURL(process.cwd()+'/public/dashboard-engine.js').href)).replaceAll("'/review-engine.js'",JSON.stringify(pathToFileURL(process.cwd()+'/public/review-engine.js').href));
+for(const name of ['category-labels','preparation-engine','agent-tools-engine'])source=source.replaceAll("'/"+name+".js'",JSON.stringify(pathToFileURL(process.cwd()+'/public/'+name+'.js').href));
 const set=new Function('self',source+';return (r,c)=>{data=r;cube=c}')(self);
 const spec={countryColumn:'Country',dateColumn:'InvoiceDate',metrics:[{id:'q',operation:'sum',columns:['Quantity'],rules:[]}],kpis:[{label:'Quantity',metric:'q'}],charts:[]};
 const v=(n)=>({rows:[['UK','2011-01',n]],metrics:[['UK','2011-01',0,[n*6,n,[]]]],charts:[]});
