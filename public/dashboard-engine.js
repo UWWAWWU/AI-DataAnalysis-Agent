@@ -47,9 +47,26 @@ export function validateSpec(v, columns, numericColumns) {
     for (const k of s.kpis)
         if (!k || typeof k.label !== 'string' || k.label.length > 200 || (k.metric ? !ids.has(k.metric) : !ids.has(k.numerator || '') || !ids.has(k.denominator || '')) || (k.denominatorExtra !== undefined && !ids.has(k.denominatorExtra)) || (k.scale !== undefined && (!Number.isFinite(k.scale) || Math.abs(k.scale) > 100000)))
             throw Error('KPI tidak valid.');
-    for (const c of s.charts)
-        if (!c || c.displayView && c.displayView !== 'table' || c.view && !['area', 'line', 'bar', 'ranking', 'table', 'pie', 'donut', 'treemap', 'histogram', 'scatter', 'boxplot'].includes(c.view) || c.width && !['wide', 'standard'].includes(c.width) || typeof c.title !== 'string' || !ids.has(c.metric) || !col(c.groupBy) || typeof c.time !== 'boolean' || !Number.isInteger(c.limit) || c.limit < 1 || c.limit > 100)
-            throw Error('Grafik tidak valid.');
+    for (const c of s.charts) {
+        if (!c || typeof c !== 'object')
+            throw Error('Each chart must be a chart object.');
+        if (c.displayView && c.displayView !== 'table')
+            throw Error('Chart displayView must be table when provided.');
+        if (c.view && !['area', 'line', 'bar', 'ranking', 'table', 'pie', 'donut', 'treemap', 'histogram', 'scatter', 'boxplot'].includes(c.view))
+            throw Error('Chart view must use a supported chart type.');
+        if (c.width && !['wide', 'standard'].includes(c.width))
+            throw Error('Chart width must be wide or standard.');
+        if (typeof c.title !== 'string')
+            throw Error('Chart title must be a string.');
+        if (!ids.has(c.metric))
+            throw Error('Chart metric must reference an existing metric ID.');
+        if (!col(c.groupBy))
+            throw Error('Chart groupBy must name an existing source column.');
+        if (typeof c.time !== 'boolean')
+            throw Error('Chart time must be a boolean.');
+        if (!Number.isInteger(c.limit) || c.limit < 1 || c.limit > 100)
+            throw Error('Chart limit must be an integer from 1 to 100.');
+    }
     for (const c of s.charts) {
         if (c.tableMetrics === null || Array.isArray(c.tableMetrics) && !c.tableMetrics.length)
             delete c.tableMetrics;
