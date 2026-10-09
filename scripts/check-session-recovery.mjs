@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import ts from 'typescript';
 import assert from 'node:assert/strict';
-const load=async file=>import('data:text/javascript;base64,'+Buffer.from(ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.ESNext}}).outputText).toString('base64'));
+const moduleURL=async file=>{let code=ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.ESNext,target:ts.ScriptTarget.ES2022}}).outputText;for(const match of [...code.matchAll(/from ['\"](\.\/[^'\"]+)['\"]/g)])code=code.replaceAll(match[1],await moduleURL('lib/'+match[1].slice(2)+'.ts'));return 'data:text/javascript;base64,'+Buffer.from(code).toString('base64')};const load=async file=>import(await moduleURL(file));
 const {tabSessionId}=await load('lib/session-store.ts');
 assert.equal(tabSessionId('reload','existing-tab'),'existing-tab');
 assert.equal(tabSessionId('back_forward','existing-tab'),'existing-tab');

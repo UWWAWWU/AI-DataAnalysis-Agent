@@ -93,7 +93,7 @@ export default function Analyst() {
     const resumeClarification = useRef(false);
     const cubeReady = useRef(false), filterRequest = useRef(0);
     const busy = agentRunning || !sessionReady || reviewBusy || filterBusy || ['profiling', 'planning', 'executing', 'insight'].includes(stage) || chatBusy;
-    useEffect(() => { const w = new Worker('/data-worker.js?v=agent-v1'); worker.current = w; w.onmessage = e => { let p = pending.current.get(e.data.requestId); if (p) {
+    useEffect(() => { const w = new Worker('/data-worker.js?v=agent-v2'); worker.current = w; w.onmessage = e => { let p = pending.current.get(e.data.requestId); if (p) {
         if(e.data.result?.sessionSaveFailed)setSessionWarning('Session recovery is unavailable in this browser. Export your work before closing this tab.');e.data.error ? p.reject(Error(e.data.error)) : p.resolve(e.data.result);
         pending.current.delete(e.data.requestId);
     } }; w.onerror = () => { pending.current.forEach(p => p.reject(Error('Could not process this file. Try a smaller dataset.'))); pending.current.clear(); }; Promise.all([fetch('/api/ai').then(r => r.json()), fetch('/api/python').then(r => r.json())]).then(([a, b]: any[]) => { setConfigured(Boolean(a.configured)); setSandboxConfigured(Boolean(b.configured)); }).catch(() => { }); fetch('/api/models').then(readResponse).then(data => { setUnavailableProviders(data.unavailable||[]);if (data.models?.length)
