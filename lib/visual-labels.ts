@@ -1,6 +1,6 @@
 import type {Chart} from './analysis';
 import type {DashboardSpec,Metric} from './dashboard';
-export function columnLabel(name:string){return name.replace(/([a-z\d])([A-Z])/g,'$1 $2').replace(/_/g,' ').replace(/\bmg L\b/g,'mg/L').replace(/(temperature|temp) C\b/gi,'$1 (°C)').replace(/\bPct\b/g,'%').trim();}
+export function columnLabel(name:string){return name.replace(/([a-z\d])([A-Z])/g,'$1 $2').replace(/_/g,' ').replace(/\bmg L\b/g,'mg/L').replace(/(temperature|temp) C\b/gi,'$1 (°C)').replace(/\bp H\b/g,'pH').replace(/\bPct\b/g,'%').trim();}
 const verbs={en:{sum:'Total',mean:'Average',count:'Records',distinct:'Unique'},id:{sum:'Total',mean:'Rata-rata',count:'Baris',distinct:'Unik'}};
 export function metricCaption(metric:Metric|undefined,locale:'en'|'id'='en'){
  if(!metric)return '';
@@ -10,8 +10,9 @@ export function metricCaption(metric:Metric|undefined,locale:'en'|'id'='en'){
 export function kpiCaptions(spec:DashboardSpec|undefined,locale:'en'|'id'='en'){
  const out:Record<string,{caption:string;percent:boolean}>={};if(!spec)return out;
  const metric=(id?:string)=>spec.metrics.find(m=>m.id===id);
+ const described=(m:Metric|undefined)=>{const rules=(m?.rules||[]).map(r=>`${columnLabel(r.column)} ${r.op} ${r.value??''}`.trim());return metricCaption(m,locale)+(rules.length?' ['+rules.join(', ')+']':'');};
  for(const k of spec.kpis){const numerator=metric(k.numerator),denominator=metric(k.denominator),extra=metric(k.denominatorExtra),main=metric(k.metric);const percent=!main&&k.scale===100;
-  const caption=main?metricCaption(main,locale):`${metricCaption(numerator,locale)} ÷ ${extra?'(':''}${metricCaption(denominator,locale)}${extra?' + '+metricCaption(extra,locale)+')':''}${k.scale!==undefined&&k.scale!==1?' × '+k.scale:''}`;
+  const caption=main?metricCaption(main,locale):`${described(numerator)} ÷ ${extra?'(':''}${described(denominator)}${extra?' + '+described(extra)+')':''}${k.scale!==undefined&&k.scale!==1?' × '+k.scale:''}`;
   const rules=(main?.rules||[]).map(r=>`${columnLabel(r.column)} ${r.op} ${r.value??''}`.trim());
   out[k.label]={caption:caption+(rules.length?' · '+rules.join(', '):''),percent};
  }return out;
