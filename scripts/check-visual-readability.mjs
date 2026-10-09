@@ -1,9 +1,10 @@
 import fs from 'node:fs';import ts from 'typescript';import assert from 'node:assert/strict';
 const load=async file=>import('data:text/javascript;base64,'+Buffer.from(ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.ESNext,target:ts.ScriptTarget.ES2022}}).outputText).toString('base64'));
-const {chartCaption,chartMeasure,kpiCaptions,columnLabel}=await load('lib/visual-labels.ts');
+const {chartCaption,chartMeasure,kpiCaptions,columnLabel,scatterDomain}=await load('lib/visual-labels.ts');
 const {readableChart,inferCategoryLabels}=await load('lib/category-labels.ts');const {chartDisplay}=await load('lib/chart-display.ts');
 assert.equal(inferCategoryLabels([{Resolved:'True'},{Resolved:'False'}]).Resolved.values.True.en,'Yes');
 assert.equal(columnLabel('UnitPriceUSD'),'Unit Price USD');assert.equal(columnLabel('Dissolved_Oxygen_mg_L'),'Dissolved Oxygen mg/L');
+assert.deepEqual(scatterDomain([26,29]),[25.85,29.15]);assert.deepEqual(scatterDomain([0,0]),[-.05,.05]);
 const scatter={title:'Price vs quantity',view:'scatter',xColumn:'Units',yColumn:'Unit_Price_USD',groupColumn:'Units',aggregation:'count',measureColumns:[],labels:[],values:[]};assert.match(chartCaption(scatter),/X: Units · Y: Unit Price USD/);assert.doesNotMatch(chartCaption(scatter),/Record count by Units/);
 assert.match(chartCaption({...scatter,view:'histogram',xColumn:'Delivery_Days'}),/Delivery Days · observations per interval/);
 const trend=readableChart({title:'Monthly sales',time:true,labels:['2026-01','2026-02'],values:[10,20]},'en');assert.deepEqual(trend.labels,['Jan 2026','Feb 2026']);assert.deepEqual(trend.values,[10,20]);

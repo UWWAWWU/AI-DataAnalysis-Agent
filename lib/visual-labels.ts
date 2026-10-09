@@ -30,3 +30,5 @@ export function chartCaption(chart:Chart,locale:'en'|'id'='en'){
  const caption=chart.tableHeaders&&chart.tableHeaders.length>2?chart.tableHeaders.slice(1).map(columnLabel).join(' · ')+` ${by} ${group}`:`${chartMeasure(chart,locale)}${group?' '+by+' '+group:''}`;
  return caption+(codes?(locale==='id'?' · Arti kode tidak tersedia dalam data':' · Code meanings not provided in the data'):'');
 }
+
+export function scatterDomain([low,high]:readonly [number,number]):[number,number]{const padding=(high-low||Math.abs(low)||1)*.05;return [low-padding,high+padding];}
