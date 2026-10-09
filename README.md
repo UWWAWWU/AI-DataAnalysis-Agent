@@ -113,7 +113,7 @@ Available actions depend on the columns, results, and visualization types suppor
 | File processing | SheetJS, browser Web Workers |
 | Analytical computation | Python, Pandas, NumPy |
 | Isolated execution | E2B Code Interpreter |
-| AI integration | Google model API and an OpenAI-compatible API |
+| AI models | Selectable language models |
 | PDF reporting | jsPDF |
 
 ## Analytical scope
@@ -132,13 +132,13 @@ AI Data Analysis Agent · An interactive workspace for data analysis
 
 </div>
 
-## Model verification
+## Available models
 
-Google AI Studio uses two server-only credentials, `GEMINI_API_KEY_1` and `GEMINI_API_KEY_2`. Gemini 3.8 Flash is the default. Discovered Gemini models are ordered by descending version, from 3.8 through 3.1, with Flash, Pro and Flash Lite ordered within each version. A failed request tries the same model with API 2 before moving to another model. With both credentials configured, an invalid structured response from API 1 is passed as repair feedback to API 2 for the same model. A legacy single credential retains its existing one-repair retry. Catalogs from both keys are merged and deduplicated; Gemini versions below 3 and non-analysis modalities are excluded.
+- **Gemini 3.8 Flash** — default model.
+- **Gemini 3.x Flash, Pro and Flash Lite** — available versions appear in the Model selector, ordered from newest to oldest.
+- **Other available models** — the Model selector shows the current model names supported by the application.
 
-`LAPAK_ROUTER_API_KEY` connects the OpenAI-compatible endpoint at `https://router.lapakvip.com/api/v1`. Its model options are discovered from the authenticated catalog. Gemini models and opaque auto/combo routes are excluded so Gemini requests stay on the dedicated Google credentials. Existing Relink model selections are rejected when the replacement router is configured. Secrets must remain server-only and never enter source control or public environment variables.
-
-Catalog access establishes availability, not full agent compatibility or an independent quota for each Google key. The earlier Relink verification in `scripts/active-model-results.json` is historical and does not verify the new router. `node scripts/check-provider-routing.mjs` exercises the actual API routes with controlled provider failures, including API 1→API 2 on the same model, model switching only after both fail, malformed-output recovery, catalog filtering and Gemini default selection.
+The available selection can change over time. Choose a model in Settings; the agent can try another available model if a request fails.
 
 Scatter coordinates remain in the browser dashboard and are excluded from model context. Box plots show quartiles and minimum/maximum whiskers; large raw-data charts disclose deterministic sampling. Histogram charts retain all requested bins, including empty bins.
 
