@@ -35,8 +35,8 @@ export function inferCategoryLabels(rows) {
             if (valid && Object.keys(values).length)
                 out[column] = { label: label(base.replace(/_/g, ' ')), values, source: `Dataset column ${paired}` };
         }
-        if (rows.some(row => typeof row[column] === 'boolean') && rows.every(row => row[column] == null || typeof row[column] === 'boolean'))
-            out[column] = { label: label(column.replace(/_/g, ' ')), values: { true: label('Yes', 'Ya'), false: label('No', 'Tidak') }, source: 'Boolean data type' };
+        if (rows.some(row => typeof row[column] === 'boolean' || /^(true|false)$/i.test(String(row[column] ?? ''))) && rows.every(row => row[column] == null || row[column] === '' || typeof row[column] === 'boolean' || /^(true|false)$/i.test(String(row[column]))))
+            out[column] = { label: label(column.replace(/_/g, ' ')), values: Object.fromEntries([...new Set(rows.map(row => String(row[column] ?? '')).filter(value => /^(true|false)$/i.test(value)))].map(value => [value, value.toLowerCase() === 'true' ? label('Yes', 'Ya') : label('No', 'Tidak')])), source: 'Boolean values in the dataset' };
     }
     for (const column of names.filter(name => /^(weekday|day_of_week|dayofweek|hari|hari_dalam_minggu)$/i.test(name))) {
         for (const dateColumn of names.filter(name => /date|tanggal|dteday/i.test(name))) {
@@ -87,7 +87,7 @@ export function readableChart(source, locale) {
     const entries = source.labels.map((raw, index) => ({ raw, value: source.values[index] }));
     if (dictionary?.order)
         entries.sort((a, b) => { const ai = dictionary.order.indexOf(a.raw), bi = dictionary.order.indexOf(b.raw); return (ai < 0 ? 1000 : ai) - (bi < 0 ? 1000 : bi); });
-    const name = (raw) => categoryName(dictionary, raw, locale), measure = source.measureLabel?.[locale] || source.measureColumns?.join(' × ').replace(/_/g, ' '), group = source.groupLabel?.[locale] || source.groupColumn?.replace(/_/g, ' ');
+    const name = (raw) => source.time && /^\d{4}-\d{2}$/.test(raw) ? new Intl.DateTimeFormat(locale, { month: 'short', year: 'numeric', timeZone: 'UTC' }).format(new Date(raw + '-01T12:00:00Z')) : source.view === 'histogram' && /^[-\d.e+]+ — [-\d.e+]+$/i.test(raw) ? raw.split(' — ').map(value => new Intl.NumberFormat(locale === 'id' ? 'id-ID' : 'en-GB', { maximumFractionDigits: 2 }).format(Number(value))).join(' – ') : categoryName(dictionary, raw, locale), measure = source.measureLabel?.[locale] || source.measureColumns?.join(' × ').replace(/_/g, ' '), group = source.groupLabel?.[locale] || source.groupColumn?.replace(/_/g, ' ');
     const verbs = locale === 'id' ? { sum: 'Total', mean: 'Rata-rata', count: 'Jumlah baris', distinct: 'Jumlah nilai unik' } : { sum: 'Total', mean: 'Average', count: 'Record count', distinct: 'Distinct count' };
     const operation = verbs[source.aggregation];
     const metricLabel = operation ? (source.aggregation === 'count' ? operation : `${operation}${measure ? ' ' + measure : ''}`) : source.metricLabel;

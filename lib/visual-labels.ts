@@ -1,0 +1,32 @@
+import type {Chart} from './analysis';
+import type {DashboardSpec,Metric} from './dashboard';
+export function columnLabel(name:string){return name.replace(/([a-z\d])([A-Z])/g,'$1 $2').replace(/_/g,' ').replace(/\bmg L\b/g,'mg/L').replace(/(temperature|temp) C\b/gi,'$1 (°C)').replace(/\bPct\b/g,'%').trim();}
+const verbs={en:{sum:'Total',mean:'Average',count:'Records',distinct:'Unique'},id:{sum:'Total',mean:'Rata-rata',count:'Baris',distinct:'Unik'}};
+export function metricCaption(metric:Metric|undefined,locale:'en'|'id'='en'){
+ if(!metric)return '';
+ const name=metric.columns.map(columnLabel).join(' × ');
+ return metric.operation==='count'?(locale==='id'?'Jumlah baris':'Record count'):`${verbs[locale][metric.operation]} ${name}`;
+}
+export function kpiCaptions(spec:DashboardSpec|undefined,locale:'en'|'id'='en'){
+ const out:Record<string,{caption:string;percent:boolean}>={};if(!spec)return out;
+ const metric=(id?:string)=>spec.metrics.find(m=>m.id===id);
+ for(const k of spec.kpis){const numerator=metric(k.numerator),denominator=metric(k.denominator),extra=metric(k.denominatorExtra),main=metric(k.metric);const percent=!main&&k.scale===100;
+  const caption=main?metricCaption(main,locale):`${metricCaption(numerator,locale)} ÷ ${extra?'(':''}${metricCaption(denominator,locale)}${extra?' + '+metricCaption(extra,locale)+')':''}${k.scale!==undefined&&k.scale!==1?' × '+k.scale:''}`;
+  const rules=(main?.rules||[]).map(r=>`${columnLabel(r.column)} ${r.op} ${r.value??''}`.trim());
+  out[k.label]={caption:caption+(rules.length?' · '+rules.join(', '):''),percent};
+ }return out;
+}
+export function chartMeasure(chart:Chart,locale:'en'|'id'='en'){
+ const measure=chart.measureLabel?.[locale]||chart.measureColumns?.map(columnLabel).join(' × ');
+ const operation=chart.aggregation as keyof typeof verbs.en;
+ return operation==='count'?(locale==='id'?'Jumlah baris':'Record count'):operation&&verbs[locale][operation]?`${verbs[locale][operation]} ${measure||''}`.trim():chart.metricLabel|| (locale==='id'?'Nilai':'Value');
+}
+export function chartCaption(chart:Chart,locale:'en'|'id'='en'){
+ const by=locale==='id'?'menurut':'by',group=chart.time?(locale==='id'?'bulan':'month'):chart.groupLabel?.[locale]||columnLabel(chart.groupColumn||'');
+ if(chart.view==='scatter')return `X: ${columnLabel(chart.xColumn||'X')} · Y: ${columnLabel(chart.yColumn||'Y')} · ${locale==='id'?'satu titik = satu observasi':'one point = one observation'}`;
+ if(chart.view==='histogram')return `${columnLabel(chart.xColumn||chart.groupColumn||'')} · ${locale==='id'?'jumlah observasi per rentang':'observations per interval'}`;
+ if(chart.view==='boxplot')return `${columnLabel(chart.xColumn||'')} ${by} ${group} · ${locale==='id'?'distribusi dan median':'distribution and median'}`;
+ const codes=/code|kode|weekday|dayofweek|weathersit|season/i.test(chart.groupColumn||'')&&chart.labels.some(value=>/^\d+$/.test(value)&&!chart.categoryLabels?.values[value]);
+ const caption=chart.tableHeaders&&chart.tableHeaders.length>2?chart.tableHeaders.slice(1).map(columnLabel).join(' · ')+` ${by} ${group}`:`${chartMeasure(chart,locale)}${group?' '+by+' '+group:''}`;
+ return caption+(codes?(locale==='id'?' · Arti kode tidak tersedia dalam data':' · Code meanings not provided in the data'):'');
+}

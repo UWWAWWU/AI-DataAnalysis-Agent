@@ -200,3 +200,5 @@
 .canvas-toolbar .canvas-readiness{margin-right:auto;font-size:10px;align-items:flex-start;min-width:0}.canvas-toolbar{justify-content:flex-end}
 
 .canvas-kpi-strip .canvas-metric{border-top-color:var(--metric-color,#ac633f)!important}
+
+.canvas-kpi-strip .canvas-metric .kpi-caption{display:block;font-size:9px;line-height:1.25;color:#74695e;margin-top:5px;overflow-wrap:anywhere}.canvas-kpi-strip .canvas-metric>span{min-height:0}.canvas-kpi-strip{flex-basis:112px}.canvas-chart-grid .chart-description{color:#655c53;line-height:1.35;margin:0 0 3px}.canvas-chart-grid .recharts-tooltip-wrapper{z-index:8}

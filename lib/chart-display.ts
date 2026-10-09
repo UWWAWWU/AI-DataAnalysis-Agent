@@ -13,7 +13,7 @@ function groupPoints(points:NonNullable<Chart['points']>){const names=[...new Se
 export function chartDisplay(chart:Chart,view:string){
  const original=chart.view||(chart.time?'area':'ranking');const points=(chart.points||[]).filter(p=>Number.isFinite(p.x)&&(p.y===undefined||Number.isFinite(p.y)));const paired=points.length>0&&points.every(p=>p.y!==undefined);let raw=chart.labels.map((name,i)=>({name,value:chart.values[i]}));
  if(!raw.length&&chart.boxes?.length)raw=chart.boxes.map(b=>({name:b.name,value:b.median}));
- const additive=raw.length>0&&raw.every(d=>d.value>=0)&&raw.some(d=>d.value>0);
+ const additive=chart.aggregation!=='mean'&&chart.aggregation!=='distinct'&&raw.length>0&&raw.every(d=>d.value>=0)&&raw.some(d=>d.value>0);
  const options=new Set<string>(['bar','ranking','line','area','table']);
  if((additive&&original!=='boxplot')||points.length)for(const type of ['pie','donut','treemap'])options.add(type);
  if(points.length){options.add('histogram');options.add('boxplot')}
