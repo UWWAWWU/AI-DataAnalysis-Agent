@@ -4,7 +4,7 @@ export function assessDashboard(result:Result|undefined){
  const issues:string[]=[],seen=new Set<string>();
  if(!result||!Array.isArray(result.charts))return {issues:['No computed dashboard'],observations:0};
  for(const chart of result.charts){
-  const signature=JSON.stringify([chart.groupColumn,chart.measureColumns,chart.aggregation,chart.view,chart.xColumn,chart.yColumn,chart.time]);
+  const signature=JSON.stringify([chart.groupColumn,chart.measureColumns,chart.metricRules,chart.tableHeaders,chart.aggregation,chart.view,chart.xColumn,chart.yColumn,chart.time]);
   if(chart.groupColumn&&chart.measureColumns&&seen.has(signature))issues.push('Repeated analytical view: '+chart.title);seen.add(signature);
   if(chart.view==='scatter'&&(!chart.xColumn||!chart.yColumn))issues.push('Missing numeric axes: '+chart.title);
   if(chart.aggregation==='sum'&&!chart.time)issues.push('Explain totals using observation counts or mean comparisons: '+chart.title);
