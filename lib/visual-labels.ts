@@ -13,7 +13,7 @@ export function kpiCaptions(spec:DashboardSpec|undefined,locale:'en'|'id'='en'){
  const described=(m:Metric|undefined)=>{const rules=(m?.rules||[]).map(r=>`${columnLabel(r.column)} ${r.op} ${r.value??''}`.trim());return metricCaption(m,locale)+(rules.length?' ['+rules.join(', ')+']':'');};
  for(const k of spec.kpis){const numerator=metric(k.numerator),denominator=metric(k.denominator),extra=metric(k.denominatorExtra),main=metric(k.metric);const percent=!main&&k.scale===100;
   let caption=main?metricCaption(main,locale):`${described(numerator)} ÷ ${extra?'(':''}${described(denominator)}${extra?' + '+described(extra)+')':''}${k.scale!==undefined&&k.scale!==1?' × '+k.scale:''}`;
-  if(main?.columns.some(c=>/bill|amount|price|revenue|sales|^tip$/i.test(c))&&!/[$€£]|usd|idr|eur|gbp/i.test(k.label))caption+='; '+(locale==='id'?'mata uang mengikuti sumber, tidak disebutkan':'source currency not specified');if(main?.columns.length===1&&/^size$|party.?size|people|persons/i.test(main.columns[0]))caption+='; '+(locale==='id'?'orang per kelompok':'people per group');
+  if(main&&['sum','mean'].includes(main.operation)&&main.columns.some(c=>/bill|amount|price|revenue|sales|^tip$/i.test(c))&&!/[$€£]|usd|idr|eur|gbp/i.test(k.label))caption+='; '+(locale==='id'?'mata uang mengikuti sumber, tidak disebutkan':'source currency not specified');if(main?.columns.length===1&&/^size$|party.?size|people|persons/i.test(main.columns[0]))caption+='; '+(locale==='id'?'orang per kelompok':'people per group');
   const rules=(main?.rules||[]).map(r=>`${columnLabel(r.column)} ${r.op} ${r.value??''}`.trim());
   out[k.label]={decimals:main?.operation==='count'||main?.operation==='distinct'?0:2,caption:caption+(rules.length?' · '+rules.join(', '):''),percent};
  }return out;
