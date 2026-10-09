@@ -134,11 +134,13 @@ AI Data Analysis Agent · An interactive workspace for data analysis
 
 ## Available models
 
-- **Gemini 3.8 Flash** — default model.
-- **Gemini 3.x Flash, Pro and Flash Lite** — available versions appear in the Model selector, ordered from newest to oldest.
-- **Other available models** — the Model selector shows the current model names supported by the application.
+- Gemini
+- DeepSeek
+- GPT
+- GLM
+- Kimi
 
-The available selection can change over time. Choose a model in Settings; the agent can try another available model if a request fails.
+Choose a model in Settings. Available options may change over time.
 
 Scatter coordinates remain in the browser dashboard and are excluded from model context. Box plots show quartiles and minimum/maximum whiskers; large raw-data charts disclose deterministic sampling. Histogram charts retain all requested bins, including empty bins.
 
