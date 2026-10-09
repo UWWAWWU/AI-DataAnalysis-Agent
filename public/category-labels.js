@@ -82,12 +82,13 @@ export function inferCategoryLabels(rows) {
 }
 export function categoryName(dictionary, value, locale) { return dictionary?.values[value]?.[locale] || value; }
 export function categoryValue(dictionary, name, locale) { return Object.keys(dictionary?.values || {}).find(value => dictionary.values[value][locale] === name) || name; }
+function readableInterval(raw, locale) { const edges = raw.split(' — ').map(Number), width = Math.abs(edges[1] - edges[0]); const digits = Math.min(12, Math.max(2, width ? Math.ceil(-Math.log10(width)) + 1 : 2)); const formatted = edges.map(value => new Intl.NumberFormat(locale === 'id' ? 'id-ID' : 'en-GB', { maximumFractionDigits: digits }).format(value)); return (formatted[0] === formatted[1] && edges[0] !== edges[1] ? edges.map(value => value.toPrecision(15)) : formatted).join(' – '); }
 export function readableChart(source, locale) {
     const dictionary = source.categoryLabels;
     const entries = source.labels.map((raw, index) => ({ raw, value: source.values[index] }));
     if (dictionary?.order)
         entries.sort((a, b) => { const ai = dictionary.order.indexOf(a.raw), bi = dictionary.order.indexOf(b.raw); return (ai < 0 ? 1000 : ai) - (bi < 0 ? 1000 : bi); });
-    const name = (raw) => source.time && /^\d{4}-\d{2}$/.test(raw) ? new Intl.DateTimeFormat(locale, { month: 'short', year: 'numeric', timeZone: 'UTC' }).format(new Date(raw + '-01T12:00:00Z')) : source.view === 'histogram' && /^[-\d.e+]+ — [-\d.e+]+$/i.test(raw) ? raw.split(' — ').map(value => new Intl.NumberFormat(locale === 'id' ? 'id-ID' : 'en-GB', { maximumFractionDigits: 2 }).format(Number(value))).join(' – ') : categoryName(dictionary, raw, locale), measure = source.measureLabel?.[locale] || source.measureColumns?.join(' × ').replace(/_/g, ' '), group = source.groupLabel?.[locale] || source.groupColumn?.replace(/_/g, ' ');
+    const name = (raw) => source.time && /^\d{4}-\d{2}$/.test(raw) ? new Intl.DateTimeFormat(locale, { month: 'short', year: 'numeric', timeZone: 'UTC' }).format(new Date(raw + '-01T12:00:00Z')) : source.view === 'histogram' && /^[-\d.e+]+ — [-\d.e+]+$/i.test(raw) ? readableInterval(raw, locale) : categoryName(dictionary, raw, locale), measure = source.measureLabel?.[locale] || source.measureColumns?.join(' × ').replace(/_/g, ' '), group = source.groupLabel?.[locale] || source.groupColumn?.replace(/_/g, ' ');
     const verbs = locale === 'id' ? { sum: 'Total', mean: 'Rata-rata', count: 'Jumlah baris', distinct: 'Jumlah nilai unik' } : { sum: 'Total', mean: 'Average', count: 'Record count', distinct: 'Distinct count' };
     const operation = verbs[source.aggregation];
     const metricLabel = operation ? (source.aggregation === 'count' ? operation : `${operation}${measure ? ' ' + measure : ''}`) : source.metricLabel;
