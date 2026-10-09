@@ -27,6 +27,15 @@ export function chartRows(chart:Pick<Chart,'view'|'labels'|'sampled'|'title'>,vi
 export function composeDashboard(charts:Chart[],keys:string[],_metrics:string[],options:{width?:number;height?:number;layout?:string;kpiPlacement?:KpiPlacement;minimums?:Record<string,number>;editing?:boolean}={}):Tile[]{
  if(!charts.length)return [];
  const width=options.width||1552,height=options.height||650,n=charts.length;
+ // A focal relationship or explicitly wide chart gets twice the area of supporting views.
+ const hero=charts.findIndex(c=>c.width==='wide'||c.view==='scatter');
+ if(hero>=0&&n>=7&&n<=9){
+  const rest=keys.filter((_,i)=>i!==hero),tiles:Tile[]=[{key:keys[hero],x:0,y:0,w:6,h:2,page:0}];
+  rest.slice(0,4).forEach((key,i)=>tiles.push({key,x:6+(i%2)*3,y:Math.floor(i/2),w:3,h:1,page:0}));
+  const bottom=rest.slice(4),w=12/bottom.length;
+  bottom.forEach((key,i)=>tiles.push({key,x:i*w,y:2,w,h:1,page:0}));return tiles;
+ }
+
  const aspect=(c:Chart)=>c.view==='scatter'||c.view==='boxplot'?1.55:c.view==='ranking'?Math.max(.8,2.2-c.labels.length*.05):c.view==='table'?1.8:c.time?c.labels.length>8?2.8:1.8:['pie','donut'].includes(c.view||'')?1.25:2;
  const variants:Record<number,number[][]>={1:[[12]],2:[[6,6],[7,5],[5,7],[8,4],[4,8]],3:[[4,4,4],[6,3,3],[3,6,3],[3,3,6]],4:[[3,3,3,3]]};
  let best:{cost:number;groups:{start:number;widths:number[]}[]}|undefined;
@@ -43,7 +52,7 @@ export function composeDashboard(charts:Chart[],keys:string[],_metrics:string[],
     const tail=solve(start+size,left-1);if(!tail)continue;
     for(const widths of variants[size]){
      let cost=tail.cost;
-     widths.forEach((w,i)=>{const c=charts[start+i],panelW=(width+12)*w/12-12;cost+=Math.log(panelW/h/aspect(c))**2;cost+=Math.max(0,140-h)/100;cost+=c.title.length>55&&w<=3?.35:0;});
+     widths.forEach((w,i)=>{const c=charts[start+i],panelW=(width+12)*w/12-12;cost+=Math.log(panelW/h/aspect(c))**2;cost+=Math.max(0,140-h)/100;cost+=c.title.length>55&&w<=3?.35:0;cost+=(c.width==='wide'||c.view==='scatter')&&w<6?4:0;cost+=Math.max(0,330-panelW)/100;});
      if(!result||cost<result.cost)result={cost,groups:[{start,widths},...tail.groups]};
     }
    }memo.set(key,result);return result;

@@ -9,6 +9,11 @@ function dateOf(value:unknown){if(value instanceof Date&&!Number.isNaN(value.get
 export function inferCategoryLabels(rows:Record<string,unknown>[]):CategoryDictionaries{
  const names=Object.keys(rows[0]||{}),out:CategoryDictionaries={};
  for(const column of names){
+  const literal=[...new Set(rows.map(row=>String(row[column]??'')).filter(Boolean))];
+  if(/^smoker$/i.test(column)&&literal.every(value=>/^(yes|no)$/i.test(value)))out[column]={label:label('Smoking status','Status perokok'),values:Object.fromEntries(literal.map(value=>[value,value.toLowerCase()==='yes'?label('Smoker','Perokok'):label('Non-smoker','Bukan perokok')])),source:'Literal smoking status values'};
+  const weekdayNames=['mon','tue','wed','thu','fri','sat','sun'];
+  if(/^day$|weekday|day.of.week/i.test(column)&&literal.length&&literal.every(value=>weekdayNames.includes(value.toLowerCase().slice(0,3))))out[column]={label:label('Day','Hari'),values:Object.fromEntries(literal.map(value=>[value,label(value)])),order:[...literal].sort((a,b)=>weekdayNames.indexOf(a.toLowerCase().slice(0,3))-weekdayNames.indexOf(b.toLowerCase().slice(0,3))),source:'Literal weekday names'};
+
   const base=column.replace(/[_ ]?(code|kode|id)$/i,'');
   const paired=names.find(name=>name!==column&&[base+'_name',base+'_label',base+'_nama',base+'Name'].some(candidate=>candidate.toLowerCase()===name.toLowerCase()));
   if(base!==column&&paired){const values:Record<string,CategoryLabel>={},reverse=new Set<string>();let valid=true;
@@ -48,10 +53,10 @@ export function readableChart<T extends import('./analysis').Chart>(source:T,loc
  const dictionary=source.categoryLabels;
  const entries=source.labels.map((raw,index)=>({raw,value:source.values[index]}));
  if(dictionary?.order)entries.sort((a,b)=>{const ai=dictionary.order!.indexOf(a.raw),bi=dictionary.order!.indexOf(b.raw);return (ai<0?1000:ai)-(bi<0?1000:bi)});
- const name=(raw:string)=>source.time&&/^\d{4}-\d{2}$/.test(raw)?new Intl.DateTimeFormat(locale,{month:'short',year:'numeric',timeZone:'UTC'}).format(new Date(raw+'-01T12:00:00Z')):source.view==='histogram'&&/^[-\d.e+]+ — [-\d.e+]+$/i.test(raw)?readableInterval(raw,locale):categoryName(dictionary,raw,locale),measure=source.measureLabel?.[locale]||source.measureColumns?.join(' × ').replace(/_/g,' '),group=source.groupLabel?.[locale]||source.groupColumn?.replace(/_/g,' ');
+ const name=(raw:string)=>/^smoker$/i.test(source.groupColumn||'')&&/^(yes|no)$/i.test(raw)?(raw.toLowerCase()==='yes'?(locale==='id'?'Perokok':'Smoker'):(locale==='id'?'Bukan perokok':'Non-smoker')):source.time&&/^\d{4}-\d{2}$/.test(raw)?new Intl.DateTimeFormat(locale,{month:'short',year:'numeric',timeZone:'UTC'}).format(new Date(raw+'-01T12:00:00Z')):source.view==='histogram'&&/^[-\d.e+]+ — [-\d.e+]+$/i.test(raw)?readableInterval(raw,locale):categoryName(dictionary,raw,locale),measure=source.measureLabel?.[locale]||source.measureColumns?.join(' × ').replace(/_/g,' '),group=source.groupLabel?.[locale]||source.groupColumn?.replace(/_/g,' ');
  const verbs=locale==='id'?{sum:'Total',mean:'Rata-rata',count:'Jumlah baris',distinct:'Jumlah nilai unik'}:{sum:'Total',mean:'Average',count:'Record count',distinct:'Distinct count'};
  const operation=verbs[source.aggregation as keyof typeof verbs];
  const metricLabel=operation?(source.aggregation==='count'?operation:`${operation}${measure?' '+measure:''}`):source.metricLabel;
  const description=source.description|| (metricLabel&&group?`${metricLabel} ${locale==='id'?'menurut':'by'} ${group}.`:undefined);
- return {...source,metricLabel,description,labels:entries.map(entry=>name(entry.raw)),values:entries.map(entry=>entry.value),boxes:source.boxes?.map(box=>({...box,name:name(box.name)})),points:source.points?.map(point=>({...point,group:point.group?name(point.group):point.group})),tableHeaders:source.tableHeaders?.map((header,index)=>index===0&&group?group:header),tableRows:source.tableRows?.map(row=>row.map((value,index)=>index===0?name(String(value)):value))};
+ return {...source,groupCounts:source.groupCounts?Object.fromEntries(Object.entries(source.groupCounts).map(([key,count])=>[name(key),count])):undefined,metricLabel,description,labels:entries.map(entry=>name(entry.raw)),values:entries.map(entry=>entry.value),boxes:source.boxes?.map(box=>({...box,name:name(box.name)})),points:source.points?.map(point=>({...point,group:point.group?name(point.group):point.group})),tableHeaders:source.tableHeaders?.map((header,index)=>index===0&&group?group:header),tableRows:source.tableRows?.map(row=>row.map((value,index)=>index===0?name(String(value)):value))};
 }

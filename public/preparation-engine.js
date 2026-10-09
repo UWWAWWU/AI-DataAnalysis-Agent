@@ -47,7 +47,7 @@ export function inspectData(rows) {
                 missing.push({ row: i + 2, value: r[column] });
         } });
         if (count)
-            findings.push({ id: `missing:${column}`, kind: 'missing', column, count, preview: missing });
+            findings.push({ id: `missing:${column}`, kind: 'missing', column, count, numeric: rows.some(r => typeof r[column] === 'number' && Number.isFinite(r[column])) && rows.every(r => r[column] == null || r[column] === '' || typeof r[column] === 'number' && Number.isFinite(r[column])), preview: missing });
         const nums = rows.map(r => r[column]).filter((v) => typeof v === 'number' && Number.isFinite(v)).sort((a, b) => a - b);
         if (nums.length < 8)
             continue;

@@ -8,13 +8,14 @@ export function metricCaption(metric:Metric|undefined,locale:'en'|'id'='en'){
  return metric.operation==='count'?(locale==='id'?'Jumlah baris':'Record count'):`${verbs[locale][metric.operation]} ${name}`;
 }
 export function kpiCaptions(spec:DashboardSpec|undefined,locale:'en'|'id'='en'){
- const out:Record<string,{caption:string;percent:boolean}>={};if(!spec)return out;
+ const out:Record<string,{caption:string;percent:boolean;decimals?:number}>={};if(!spec)return out;
  const metric=(id?:string)=>spec.metrics.find(m=>m.id===id);
  const described=(m:Metric|undefined)=>{const rules=(m?.rules||[]).map(r=>`${columnLabel(r.column)} ${r.op} ${r.value??''}`.trim());return metricCaption(m,locale)+(rules.length?' ['+rules.join(', ')+']':'');};
  for(const k of spec.kpis){const numerator=metric(k.numerator),denominator=metric(k.denominator),extra=metric(k.denominatorExtra),main=metric(k.metric);const percent=!main&&k.scale===100;
-  const caption=main?metricCaption(main,locale):`${described(numerator)} ÷ ${extra?'(':''}${described(denominator)}${extra?' + '+described(extra)+')':''}${k.scale!==undefined&&k.scale!==1?' × '+k.scale:''}`;
+  let caption=main?metricCaption(main,locale):`${described(numerator)} ÷ ${extra?'(':''}${described(denominator)}${extra?' + '+described(extra)+')':''}${k.scale!==undefined&&k.scale!==1?' × '+k.scale:''}`;
+  if(main?.columns.some(c=>/bill|amount|price|revenue|sales|^tip$/i.test(c))&&!/[$€£]|usd|idr|eur|gbp/i.test(k.label))caption+='; '+(locale==='id'?'mata uang mengikuti sumber, tidak disebutkan':'source currency not specified');if(main?.columns.length===1&&/^size$|party.?size|people|persons/i.test(main.columns[0]))caption+='; '+(locale==='id'?'orang per kelompok':'people per group');
   const rules=(main?.rules||[]).map(r=>`${columnLabel(r.column)} ${r.op} ${r.value??''}`.trim());
-  out[k.label]={caption:caption+(rules.length?' · '+rules.join(', '):''),percent};
+  out[k.label]={decimals:main?.operation==='count'||main?.operation==='distinct'?0:2,caption:caption+(rules.length?' · '+rules.join(', '):''),percent};
  }return out;
 }
 export function chartMeasure(chart:Chart,locale:'en'|'id'='en'){

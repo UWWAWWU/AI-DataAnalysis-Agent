@@ -2,6 +2,7 @@ import ts from 'typescript';import fs from 'node:fs/promises';import assert from
 const source=await fs.readFile('lib/canvas-layout.ts','utf8');const {composeDashboard,overlap,chartRows}=await import('data:text/javascript;base64,'+Buffer.from(ts.transpileModule(source,{compilerOptions:{module:ts.ModuleKind.ESNext,target:ts.ScriptTarget.ES2022}}).outputText).toString('base64'));
 const chart=(view,n=5,extra={})=>({title:view,view,labels:Array.from({length:n},(_,i)=>String(i)),values:Array(n).fill(1),...extra});
 const cases=[
+ ...[7,8,9].map(n=>({name:`${n} charts with a primary relationship`,charts:[chart('scatter'),...Array.from({length:n-1},()=>chart('bar'))],metrics:6,options:{width:1400}})),
  {name:'Long time series with mixed charts',charts:[chart('line',24,{time:true}),chart('bar'),chart('donut'),chart('histogram')],metrics:5,options:{kpiPlacement:'horizontal',width:1400}},
  {name:'Relationship overview',charts:[chart('scatter'),chart('bar'),chart('histogram'),chart('donut')],metrics:5,options:{width:1200}},
  {name:'Four compact comparisons',charts:Array.from({length:4},()=>chart('donut')),metrics:4,options:{width:1400}},

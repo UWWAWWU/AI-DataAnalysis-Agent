@@ -24,13 +24,13 @@ You can explore the dashboard, ask questions, request additional calculations an
 | --- | --- |
 | Dataset upload | Open CSV or XLSX files up to 40 MB and select an Excel sheet. |
 | Automatic analysis | Let AI choose quality checks, statistics, comparisons, distributions, correlations and Python investigations. |
-| Interactive dashboard | Explore KPI cards and charts on a 16:9 canvas with zoom controls. |
+| Interactive dashboard | Explore KPI cards and charts on a 16:9 canvas with clear labels, observation counts and zoom controls. |
 | Flexible layout | Move and resize charts, align them to the grid or arrange them automatically. |
 | Chart controls | Choose compatible chart types and adjust titles, axes, labels, legends and colors. Inspect the figures behind a chart. |
 | Filters | Explore supported categories and date ranges. Click a category in a linked chart to filter the dashboard. |
 | AI conversation | Ask about results, add or revise charts, change filters and request further analysis. |
-| Data details | Inspect column types, missing values, exact duplicates, source rows and analysis methodology. |
-| Data review | Preview proposed changes involving duplicates, missing values and potential outliers. Apply changes or keep the data. |
+| Data details | Inspect column types, missing values, exact duplicates, source rows, AI analysis decisions and methodology. |
+| Data review | Review affected rows and before and after values for duplicates, missing values and potential outliers. Apply changes or keep the data. |
 | Downloads | Export the dashboard as HTML or PDF, download CSV data or save analysis results as JSON. Download the original dataset from Data review. |
 | Session recovery | Restore the dataset, filters, dashboard and conversation when refreshing the same tab. Continue an interrupted analysis from its saved checkpoint. |
 | Language settings | Choose English or Indonesian. The selection is retained when refreshing the same tab. |
