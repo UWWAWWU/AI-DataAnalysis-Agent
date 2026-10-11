@@ -8,10 +8,4 @@ assert.throws(()=>parseAIResponse(response('{}','MAX_TOKENS')),e=>e.code==='AI_T
 assert.throws(()=>parseAIResponse({}),e=>e.code==='AI_EMPTY');
 assert.throws(()=>parseAIResponse({promptFeedback:{blockReason:'SAFETY'}}),e=>e.code==='AI_BLOCKED');
 assert.ok(PLAN_SCHEMA.required.includes('dashboard'));assert.ok(!PLAN_SCHEMA.required.includes('code'));
-const {analysisModels}=await mod('lib/model-options.ts');
-const names=['gemini-3.8-flash','gemini-3.7-flash','gemini-3.5-flash-lite','gemini-3.6-flash','gemini-3.5-flash','gemini-3.1-flash-lite','gemini-3.1-pro-preview','gemini-3.1-pro-preview-customtools','gemini-3.8-flash-image','gemini-2.5-pro'];
-const models=analysisModels(names.map(name=>({name:'models/'+name,supportedGenerationMethods:['generateContent']})));
-assert.deepEqual(models.map(m=>m.id),['gemini-3.8-flash','gemini-3.7-flash','gemini-3.6-flash','gemini-3.5-flash','gemini-3.5-flash-lite','gemini-3.1-pro-preview','gemini-3.1-flash-lite']);assert.equal(models.find(m=>m.id==='gemini-3.1-pro-preview').label,'Gemini 3.1 Pro · Preview');
-assert.deepEqual(analysisModels([{name:'gemini-3.8-flash',supportedGenerationMethods:['embedContent']}]),[]);
-assert.deepEqual(analysisModels([{name:'gemini-3.1-pro',supportedGenerationMethods:['generateContent']},{name:'gemini-3.1-pro-preview',supportedGenerationMethods:['generateContent']}]).map(m=>m.id),['gemini-3.1-pro']);
-console.log('AI response and model catalog checks passed.');
+console.log('AI response parsing and validation checks passed.');

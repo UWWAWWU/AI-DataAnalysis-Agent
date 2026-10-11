@@ -41,8 +41,9 @@ Supported charts include bar, horizontal bar, line, area, pie, donut, treemap, h
 
 1. Upload a CSV or XLSX file.
 2. The application profiles the data and prepares unambiguous numeric values and surrounding whitespace.
-3. The agent chooses investigations, reads their results and decides what to examine next.
-4. Python calculates the metrics and chart data from a validated dashboard specification.
+3. Findings open Data review before a dashboard is generated. AI recommends supported treatments with reasons, effects and assumptions. Choose a treatment, inspect its draft and apply it, or explicitly keep the data. Resolve every finding, then select Finish review & build dashboard.
+4. The agent chooses investigations, reads their results and decides what to examine next.
+5. Python calculates the metrics and chart data from a validated dashboard specification.
 5. The agent evaluates the results and prepares an analysis brief.
 6. Explore the dashboard or ask the AI assistant to continue the investigation.
 
@@ -104,3 +105,7 @@ Scatter and box plots may sample up to 1,000 rows per filter partition, with a n
 Custom Python investigations can support explanations and additional statistics. Dashboard charts use the supported specification and existing dataset columns.
 
 Session recovery stores working data in the browser. A new tab starts a new session, and closing the tab stops active analysis.
+
+### AI provider
+
+All analysis, review recommendations and translations use Lapak Router through its OpenAI-compatible endpoint. Configure `LAPAK_ROUTER_API_KEY` and optionally `LAPAK_ROUTER_BASE_URL`; model choices come from the active router catalog. Google AI Studio and legacy provider credentials are not used. `E2B_API_KEY` is still required for Python execution. Original uploads are retained; a finding kept by the user counts as reviewed and remains disclosed in the analysis context.

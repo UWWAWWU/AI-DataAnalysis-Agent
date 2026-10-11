@@ -49,9 +49,14 @@ export function inspectData(rows) {
         if (count)
             findings.push({ id: `missing:${column}`, kind: 'missing', column, count, numeric: rows.some(r => typeof r[column] === 'number' && Number.isFinite(r[column])) && rows.every(r => r[column] == null || r[column] === '' || typeof r[column] === 'number' && Number.isFinite(r[column])), preview: missing });
         const nums = rows.map(r => r[column]).filter((v) => typeof v === 'number' && Number.isFinite(v)).sort((a, b) => a - b);
-        if (nums.length < 8)
+        if (!nums.length)
             continue;
         const q = (p) => { const n = (nums.length - 1) * p, k = Math.floor(n); return nums[k] + (nums[Math.ceil(n)] - nums[k]) * (n - k); };
+        const missingFinding = findings.find(f => f.id === `missing:${column}`);
+        if (missingFinding?.numeric)
+            missingFinding.statistics = { observed: nums.length, min: nums[0], max: nums[nums.length - 1], mean: nums.reduce((sum, n) => sum + n, 0) / nums.length, median: q(.5), q1: q(.25), q3: q(.75) };
+        if (nums.length < 8)
+            continue;
         const iqr = q(.75) - q(.25);
         if (!iqr)
             continue;
