@@ -1,6 +1,8 @@
 import type {Finding} from './data-preparation';
 export type Treatment='keep'|'remove'|'median'|'mean';
 export type CleaningRecommendation={id:string;recommended:Treatment;reason:string;impact:string;assumption:string};
+export function recommendationTreatments(f:Finding):Treatment[]{return f.kind==='missing'&&f.numeric?['keep','remove','median','mean']:['keep','remove'];}
+export function recommendationGuidance(findings:Finding[]){return 'CURRENT REVIEW CONTRACT: recommended must be one of the exact protocol tokens allowed for that finding. Do not return delete_rows, drop, impute, fill_median, inspect or another activity name. Allowed choices by finding ID: '+JSON.stringify(findings.map(f=>({id:f.id,allowed:recommendationTreatments(f)})))+'. Return one recommendation per supplied ID, with nonempty reason, impact and assumption. Preserve finding IDs exactly. ';}
 export const RECOMMENDATION_SCHEMA={type:'object',properties:{recommendations:{type:'array',items:{type:'object',properties:{id:{type:'string'},recommended:{type:'string',enum:['keep','remove','median','mean']},reason:{type:'string'},impact:{type:'string'},assumption:{type:'string'}},required:['id','recommended','reason','impact','assumption'],additionalProperties:false}}},required:['recommendations'],additionalProperties:false};
 export function recommendationResponseSchema(findings:Finding[]){
  const list=RECOMMENDATION_SCHEMA.properties.recommendations;
