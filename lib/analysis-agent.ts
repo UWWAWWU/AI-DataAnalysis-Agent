@@ -41,7 +41,7 @@ export function validateAgentDecision(value:unknown,names:string[],run?:AgentRun
  const raw=value as AgentDecision;
  // Some compatible models label the activity instead of the protocol action.
  // Translate only an explicit tool request; never infer a tool from prose or a plan.
- const d=raw&&['inspect','inspect_data','query','run_activity','run_analysis','run_code'].includes(raw.action)&&raw.tool
+ const d=raw&&['inspect','inspect_data','query','read','run','run_activity','run_analysis','run_code'].includes(raw.action)&&raw.tool
   ?{action:'tool' as const,purpose:raw.purpose,tool:raw.tool}:raw;
  if(!d||!['tool','dashboard','finish','clarify'].includes(d.action)||typeof d.purpose!=='string'||!d.purpose.trim()||d.purpose.length>1000)throw Error('Invalid agent decision.');
  if(run&&d.action==='clarify'&&!run.allowClarification)throw Error('Automatic exploration must continue using the data and explicit assumptions. Optional clarification is not allowed.');
