@@ -6,7 +6,8 @@ import {validateSpec} from './dashboard';
 import {PLAN_SCHEMA} from './ai-response';
 export type AgentDecision={action:'tool'|'dashboard'|'finish'|'clarify';purpose:string;tool?:AgentTool;plan?:AnalysisPlan;evidenceIds?:string[];question?:string;limitations?:string[]};
 export type AgentReport={id:string;purpose:string;tool?:AgentTool;kind:'tool'|'dashboard';ok:boolean;result?:unknown;error?:string};
-export type AgentRun={version:1;datasetVersion:string;goal:string;allowClarification?:boolean;selection?:{country:string;from:string;to:string;deduplicate:boolean};phase:'running'|'paused'|'complete'|'clarify';reports:AgentReport[];pending?:AgentDecision;plan?:AnalysisPlan;question?:string;limitations?:string[];reason?:string};
+export const ANALYTICAL_AUTONOMY=`Make analytical decisions from the supplied data and evidence. Do not ask the user to select charts, columns, exploratory methods, an optional threshold, or whether you should continue. When the user delegates an analysis or requests an investigation, choose the supported action and do it; chat uses action update for a new computation, rather than asking permission to analyze. State reasonable descriptive assumptions and limitations. Inspect data before requesting any essential business definition. At most one essential clarification is permitted in an investigation; use the supplied answer without opening another clarification round. If a required definition remains unavailable, complete the supported descriptive analysis and explicitly mark that business metric uncomputable; never invent its definition or numerical target. Treat statistical outliers as review candidates, never as proven errors. Explain missing-value exclusions, retained duplicates, unequal observation counts, and unusually wide distributions when evidence supports them. Do not infer causal effects or operational safety from descriptive associations. `;
+export type AgentRun={version:1;datasetVersion:string;goal:string;allowClarification?:boolean;clarificationCount?:number;selection?:{country:string;from:string;to:string;deduplicate:boolean};phase:'running'|'paused'|'complete'|'clarify';reports:AgentReport[];pending?:AgentDecision;plan?:AnalysisPlan;question?:string;limitations?:string[];reason?:string};
 export const AGENT_SCHEMA={type:'object',properties:{action:{type:'string',enum:['tool','dashboard','finish','clarify']},purpose:{type:'string'},tool:{type:'object',properties:{name:{type:'string',enum:['quality','describe','aggregate','correlation','distribution','python']},code:{type:'string'},columns:{type:'array',items:{type:'string'}},groupBy:{type:'string'},operation:{type:'string',enum:['sum','mean','count','distinct']},bins:{type:'integer'}},required:['name']},plan:PLAN_SCHEMA,evidenceIds:{type:'array',items:{type:'string'}},question:{type:'string'},limitations:{type:'array',items:{type:'string'}}},required:['action','purpose']};
 export function agentResponseSchema(columns:{name:string;type:string}[],run?:AgentRun){
  const numeric=['',...columns.filter(c=>c.type==='number').map(c=>c.name)];
@@ -24,8 +25,8 @@ export function restoreAgentRun(run:AgentRun):AgentRun {
 }
 export function agentAllowedActions(run?:AgentRun):AgentDecision['action'][] {
  const reports=run?.reports||[];
- const clarify:AgentDecision['action'][]=run?.allowClarification===true?['clarify']:[];
- if(!reports.some(r=>r.kind==='tool'&&r.ok&&r.tool))return ['tool',...clarify];
+ const clarify:AgentDecision['action'][]=run?.allowClarification===true&&(run.clarificationCount||0)<1?['clarify']:[];
+ if(!reports.some(r=>r.kind==='tool'&&r.ok&&r.tool))return ['tool'];
  if(!reports.some(r=>r.kind==='dashboard'&&r.ok))return ['tool','dashboard',...clarify];
  return ['tool','dashboard','finish',...clarify];
 }
@@ -57,7 +58,10 @@ export async function runAnalysisAgent(initial:AgentRun,options:{decide:(run:Age
     if(!hasCompletionEvidence(d,run)){run.reports.push({id:'e'+(run.reports.length+1),kind:'tool',purpose:d.purpose,ok:false,error:'Completion rejected: cite successful tool evidence and the latest computed dashboard.'});run.pending=undefined;await save();continue;}
     run.phase='complete';run.limitations=d.limitations||[];run.pending=undefined;await save();return run;
    }
-   if(d.action==='clarify'){run.phase='clarify';run.question=d.question;run.pending=undefined;await save();return run;}
+   if(d.action==='clarify'){
+    if(!agentAllowedActions(run).includes('clarify')){run.reports.push({id:'e'+(run.reports.length+1),kind:'tool',purpose:d.purpose,ok:false,error:'Clarification is unavailable. Inspect the data first, use the supplied user answer, and proceed with explicit analytical assumptions. Explain any uncomputable business metric as a limitation.'});run.pending=undefined;await save();continue;}
+    run.clarificationCount=(run.clarificationCount||0)+1;run.phase='clarify';run.question=d.question;run.pending=undefined;await save();return run;
+   }
    const report:AgentReport={id:'e'+(run.reports.length+1),purpose:d.purpose,kind:d.action==='dashboard'?'dashboard':'tool',tool:d.tool,ok:false};
    try{
     if(d.action==='tool'){

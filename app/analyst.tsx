@@ -189,7 +189,7 @@ export default function Analyst() {
         const prior=resume&&agentCurrent.current?.datasetVersion===datasetVersion.current&&JSON.stringify(agentCurrent.current.selection)===JSON.stringify(f)?agentCurrent.current:null;
         const initial:AgentRun=prior?{...prior}: {version:1,datasetVersion:datasetVersion.current,allowClarification:Boolean(objective.trim()),goal:objective||'Explore this dataset: investigate data quality, relevant distributions and relationships; build a clear dashboard and explain the supported findings.',phase:'running',reports:[],selection:{...f},plan:answer.startsWith('Requested change:')?plan||undefined:undefined};
         if(!objective.trim()&&!prior)localization.remember([initial.goal],'en');
-        if(answer&&!answer.startsWith('Requested change:')){initial.goal+=' User clarification: '+answer;initial.question=undefined;initial.pending=undefined;}
+        if(answer&&!answer.startsWith('Requested change:')){initial.goal+=' User clarification: '+answer;initial.question=undefined;initial.pending=undefined;initial.clarificationCount=Math.max(1,initial.clarificationCount||0);}
         computedResult.current=resume?result:null;computedPlan.current=initial.plan||null;
         try{
             const completed=await runAnalysisAgent(initial,{
