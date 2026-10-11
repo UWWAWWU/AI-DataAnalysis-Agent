@@ -1,7 +1,6 @@
 'use client';
 import {AI_CLIENT_TIMEOUT_MS} from '@/lib/ai-limits';
 import type {CleaningRecommendation} from '@/lib/cleaning-recommendations';
-'use client';
 import {assessDashboard} from '@/lib/dashboard-quality';
 import {runAnalysisAgent,validateAgentDecision,restoreAgentRun,type AgentRun} from '@/lib/analysis-agent';
 import {reviseDashboard,appendDashboard,validateFilterChange} from '@/lib/dashboard-actions';
