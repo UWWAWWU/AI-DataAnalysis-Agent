@@ -22,3 +22,5 @@ for(const name of new Set([...applyText.matchAll(/\b(set[A-Z]\w*)\(/g)].map(m=>m
 applyEnv.setKept=fn=>retained=fn(retained);
 await handler('async function applyReview()','async function ask()',applyEnv).applyReview();assert.deepEqual(operations,['reviewPrepare','sessionWorkingFile','reviewCommit','preparation']);assert.deepEqual(retained,['outliers:x']);assert.equal(applyEnv.localRef.current,null);assert.equal(applyEnv.file.current.name,'reviewed-data.csv');
 console.log('Dirty upload opens review without analysis; clean upload starts analysis; approved drafts commit before a dashboard exists and preserve unchanged keep decisions.');
+
+let recommending=true;const emptyRecommendation=handler('async function recommendCleaning(','async function stageCleaning(',{profile:{},preparation:{findings:[]},filter:{},setRecommendations:()=>{},setRecommendationBusy:value=>recommending=value,setRecommendationError:()=>{}}).recommendCleaning;await emptyRecommendation();assert.equal(recommending,false);console.log('Finishing the last review clears recommendation loading and releases the finish button.');
