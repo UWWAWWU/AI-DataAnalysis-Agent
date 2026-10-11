@@ -11,7 +11,14 @@ export function parseAIResponse(response:any){
  if(candidate?.finishReason==='MAX_TOKENS')throw new AIResponseError('AI_TRUNCATED','The AI response reached its output limit. Please retry the analysis.');
  const text=candidate?.content?.parts?.filter((part:any)=>!part.thought).map((part:any)=>part.text||'').join('\n').trim();
  if(!text)throw new AIResponseError('AI_EMPTY','The AI service returned an empty response. Please retry.');
- try{return JSON.parse(text.replace(/^```(?:json)?\s*/i,'').replace(/\s*```$/,''))}catch{throw new AIResponseError('AI_JSON','The AI response was incomplete or had an invalid format. Please retry.');}
+ const cleaned=text.replace(/^```(?:json)?\s*/i,'').replace(/\s*```$/,'');
+ try{return JSON.parse(cleaned)}catch{
+  // Accept one complete object surrounded by prose. Never repair truncated JSON,
+  // choose between multiple objects, or bypass the caller's contract validation.
+  const start=cleaned.indexOf('{'),end=cleaned.lastIndexOf('}');
+  if(start>=0&&end>start){try{return JSON.parse(cleaned.slice(start,end+1))}catch{}}
+  throw new AIResponseError('AI_JSON','The AI response was incomplete or had an invalid format. Please retry.');
+ }
 }
 const reviewRule=object({column:string,op:{type:'string',enum:['eq','ne','gt','ge','lt','le','contains','missing','notMissing']},value:{anyOf:[string,{type:'number'}]}},['column','op']);
 const narrative={headline:string,observations:array(object({text:string,factIds:strings})),limitations:strings};
