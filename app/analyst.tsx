@@ -1,3 +1,4 @@
+'use client';
 import {AI_CLIENT_TIMEOUT_MS} from '@/lib/ai-limits';
 import type {CleaningRecommendation} from '@/lib/cleaning-recommendations';
 'use client';
