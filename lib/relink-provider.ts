@@ -15,7 +15,7 @@ export function relinkError(code:unknown){
 }
 export function relinkPayload(payload:any,model:string){
  const schema=payload.generationConfig.responseJsonSchema;
- return {model,messages:[{role:'system',content:payload.systemInstruction.parts.map((p:any)=>p.text).join('\n')+(schema?'\nReturn a JSON object conforming to this JSON Schema. Include every required field; no Markdown or surrounding text.\n'+JSON.stringify(schema):'')},{role:'user',content:payload.contents[0].parts.map((p:any)=>p.text).join('\n')}],max_tokens:payload.generationConfig.maxOutputTokens,response_format:{type:'json_object'}};
+ return {model,messages:[{role:'system',content:payload.systemInstruction.parts.map((p:any)=>p.text).join('\n')+(schema?'\nReturn a JSON object conforming to this JSON Schema. Include every required field; no Markdown or surrounding text.\n'+JSON.stringify(schema):'')},{role:'user',content:payload.contents[0].parts.map((p:any)=>p.text).join('\n')}],max_tokens:payload.generationConfig.maxOutputTokens,response_format:schema?{type:'json_schema',json_schema:{name:'analysis_response',strict:false,schema}}:{type:'json_object'}};
 }
 export function parseRelinkResponse(response:any){
  const choice=response?.choices?.[0];

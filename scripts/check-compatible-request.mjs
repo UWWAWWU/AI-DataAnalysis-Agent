@@ -16,4 +16,17 @@ for(const [status,message] of [[400,'Invalid model'],[422,'Invalid messages'],[4
  let count=0;const response=await requestCompatible('https://example.test',init,async()=>{count++;return new Response(message,{status})});
  assert.equal(response.status,status);assert.equal(count,1);
 }
-console.log('JSON-mode compatibility retry preserves instructions; unrelated errors are not retried.');
+const schemaInit={...init,body:JSON.stringify({...JSON.parse(init.body),response_format:{type:'json_schema',json_schema:{name:'test',schema:{type:'object'}}}})};
+calls=[];
+const schemaResult=await requestCompatible('https://example.test',schemaInit,async(url,options)=>{
+ calls.push(JSON.parse(options.body));
+ return calls.length<3?new Response('response_format '+calls.at(-1).response_format.type+' is not supported',{status:422}):new Response('{}');
+});
+assert.equal(schemaResult.status,200);
+assert.deepEqual(calls.map(c=>c.response_format?.type),['json_schema','json_object',undefined]);
+assert.ok(calls.every(c=>c.model==='test'&&JSON.stringify(c.messages)===JSON.stringify(calls[0].messages)));
+assert.equal(JSON.parse(schemaInit.body).response_format.type,'json_schema');
+let invalidSchemaCalls=0;
+const invalidSchema=await requestCompatible('https://example.test',schemaInit,async()=>{invalidSchemaCalls++;return new Response('Invalid json_schema: required field missing',{status:400});});
+assert.equal(invalidSchema.status,400);assert.equal(invalidSchemaCalls,1);
+console.log('Schema -> JSON -> prompt compatibility preserves model and instructions; invalid schemas and unrelated errors are not retried.');
