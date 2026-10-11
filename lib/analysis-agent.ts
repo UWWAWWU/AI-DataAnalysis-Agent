@@ -41,7 +41,7 @@ export function validateAgentDecision(value:unknown,names:string[],run?:AgentRun
  const raw=value as AgentDecision;
  // Some compatible models label the activity instead of the protocol action.
  // Translate only an explicit tool request; never infer a tool from prose or a plan.
- let d=raw&&['inspect','inspect_data','query','read','run','execute','run_activity','run_analysis','run_code'].includes(raw.action)&&raw.tool
+ let d=raw&&['inspect','inspect_data','query','query_data','read','run','execute','execute_code','execute_python_code','analyze_data','run_activity','run_analysis','run_code'].includes(raw.action)&&raw.tool
   ?{action:'tool' as const,purpose:raw.purpose,tool:raw.tool}:raw;
  const sibling=(raw as AgentDecision&{dashboard?:AnalysisPlan['dashboard']})?.dashboard;
  if(d?.action==='dashboard'&&d.plan&&typeof d.plan==='object'&&!Array.isArray(d.plan)&&d.plan.dashboard===undefined&&sibling&&typeof sibling==='object'&&!Array.isArray(sibling))d={...d,plan:{...d.plan,dashboard:sibling}};
