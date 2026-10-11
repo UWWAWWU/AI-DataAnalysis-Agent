@@ -11,6 +11,7 @@ clearModelCooldowns();seen=[];await withModelFailover('selected',[],async id=>{s
 clearModelCooldowns();seen=[];await assert.rejects(withModelFailover('a',models,async id=>{seen.push(id);throw failure('AI_VALIDATION')}));assert.deepEqual(seen,['a','b','c','d']);
 clearModelCooldowns();seen=[];const events=[];await assert.rejects(withModelFailover('c',models,async id=>{seen.push(id);throw failure('AI_HTTP_503')},(id,index,previous)=>events.push({id,index,previous})),e=>e.code==='AI_MODELS_UNAVAILABLE');assert.deepEqual(seen,['c','d','a','b']);assert.equal(events[1].previous.model,'c');assert.equal(events[1].previous.code,'AI_HTTP_503');
 console.log('Failover checks passed: circular order, cross-provider traversal, quota/timeout/validation fallback, every model once, previous failure status, and exhaustion.');
+clearModelCooldowns();seen=[];await withModelFailover('lapak:deepseek-v4-flash',[{id:'lapak:deepseek-v4-flash',label:'DeepSeek'},{id:'lapak:deepseek-v4-pro',label:'DeepSeek Pro'},{id:'lapak:gpt-5.6-luna',label:'GPT'}],async id=>{seen.push(id);if(id.includes('deepseek'))throw failure('AI_TIMEOUT');return true});assert.deepEqual(seen,['lapak:deepseek-v4-flash','lapak:gpt-5.6-luna']);
 
 const mixed=[{id:'gemini-3.8-flash',label:'Gemini'},{id:'relink:gpt-5.6',label:'GPT'},{id:'relink:gpt-5.6-luna',label:'Luna'}];clearModelCooldowns();seen=[];await withModelFailover('relink:gpt-5.6',mixed,async id=>{seen.push(id);if(id!=='gemini-3.8-flash')throw failure('AI_TIMEOUT');return true});assert.deepEqual(seen,['relink:gpt-5.6','gemini-3.8-flash']);
 

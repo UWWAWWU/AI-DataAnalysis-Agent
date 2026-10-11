@@ -30,7 +30,9 @@ export function chartCaption(chart:Chart,locale:'en'|'id'='en'){
  if(chart.view==='boxplot')return `${columnLabel(chart.xColumn||'')} ${by} ${group} · ${locale==='id'?'distribusi dan median':'distribution and median'}`;
  const codes=/code|kode|weekday|dayofweek|weathersit|season/i.test(chart.groupColumn||'')&&chart.labels.some(value=>/^\d+$/.test(value)&&!chart.categoryLabels?.values[value]);
  const caption=chart.tableHeaders&&chart.tableHeaders.length>2?chart.tableHeaders.slice(1).map(columnLabel).join(' · ')+` ${by} ${group}`:`${chartMeasure(chart,locale)}${group?' '+by+' '+group:''}`;
- return caption+(codes?(locale==='id'?' · Arti kode tidak tersedia dalam data':' · Code meanings not provided in the data'):'');
+ const operators:Record<string,string>={gt:'>',ge:'≥',lt:'<',le:'≤',eq:'=',ne:'≠',prefix:locale==='id'?'diawali':'starts with',notPrefix:locale==='id'?'tidak diawali':'does not start with',notEmpty:locale==='id'?'tidak kosong':'is not empty'};
+ const scope=(chart.metricRules||[]).map(rule=>`${columnLabel(rule.column)} ${operators[rule.op]||rule.op} ${rule.value??''}`.trim()).join('; ');
+ return caption+(scope?' · '+(locale==='id'?'Cakupan: ':'Scope: ')+scope:'')+(codes?(locale==='id'?' · Arti kode tidak tersedia dalam data':' · Code meanings not provided in the data'):'');
 }
 
 export function scatterDomain([low,high]:readonly [number,number]):[number,number]{const padding=(high-low||Math.abs(low)||1)*.05;return [low-padding,high+padding];}

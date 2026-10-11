@@ -15,13 +15,16 @@ export function chartDisplay(chart:Chart,requestedView:string){
  const original=chart.view||(chart.time?'area':'ranking');const points=(chart.points||[]).filter(p=>Number.isFinite(p.x)&&(p.y===undefined||Number.isFinite(p.y)));const paired=points.length>0&&points.every(p=>p.y!==undefined);let raw=chart.labels.map((name,i)=>({name,value:chart.values[i]}));
  if(!raw.length&&chart.boxes?.length)raw=chart.boxes.map(b=>({name:b.name,value:b.median}));
  const additive=chart.aggregation!=='mean'&&chart.aggregation!=='distinct'&&raw.length>0&&raw.every(d=>d.value>=0)&&raw.some(d=>d.value>0);
- const options=new Set<string>(['bar','ranking','line','area','table']);
- if((additive&&original!=='boxplot')||points.length)for(const type of ['pie','donut','treemap'])options.add(type);
+ const orderedGroups=raw.length>0&&raw.every(d=>intervalStart(d.name)!==null||d.name.trim()&&Number.isFinite(Number(d.name)));
+ const options=new Set<string>(['bar','ranking','table']);
+ if(chart.time||orderedGroups)for(const type of ['line','area'])options.add(type);
+ if((additive&&original!=='boxplot')||points.length){options.add('treemap');if((points.length?new Set(points.map(p=>p.group||'All')).size:raw.length)<=6)for(const type of ['pie','donut'])options.add(type);}
  if(points.length){options.add('histogram');options.add('boxplot')}
  if(paired)options.add('scatter');
  if(original==='histogram')options.add('histogram');if(original==='boxplot')options.add('boxplot');if(original==='scatter')options.add('scatter');
  const grouped=groupPoints(points);const groupCounts:Record<string,number>=original==='scatter'?{}:{...chart.groupCounts};for(const p of grouped)if(!Object.keys(chart.groupCounts||{}).length||original==='scatter'){const name=p.group||'All';groupCounts[name]=(groupCounts[name]||0)+1;}
- let view=requestedView;const comparingPoints=points.length>0&&!['scatter','histogram','boxplot','table'].includes(view)&&original!==view&&original!=='histogram';if(!chart.time&&(['line','area'].includes(view)&&comparingPoints||view==='area'||view==='line'&&raw.length>0&&raw.every(d=>intervalStart(d.name)!==null)))view='bar';if(original==='scatter'&&!chart.time){options.delete('line');options.delete('area')}
+ let view=requestedView;const comparingPoints=points.length>0&&!['scatter','histogram','boxplot','table'].includes(view)&&original!==view&&original!=='histogram';if(!chart.time&&(['line','area'].includes(view)&&comparingPoints||view==='area'||view==='line'&&!orderedGroups))view='bar';if(original==='scatter'&&!chart.time){options.delete('line');options.delete('area')}
+ if(['pie','donut','treemap'].includes(view)&&!options.has(view))view='bar';
  let data=raw;let meaning=original==='boxplot'&&view!==original&&view!=='table'&&!points.length?'medians':'original';let boxData=chart.boxes||[];
  const composed=['pie','donut','treemap'].includes(view);
  if(points.length&&view!==original&&view!=='table'&&view!=='scatter'&&(original!=='histogram'||view==='boxplot')){
@@ -30,5 +33,5 @@ export function chartDisplay(chart:Chart,requestedView:string){
   else {const groups=new Map<string,{sum:number;count:number}>();for(const p of grouped){const name=p.group||'All',g=groups.get(name)||{sum:0,count:0};g.sum+=paired?p.y!:p.x;g.count++;groups.set(name,g)}data=[...groups].map(([name,g])=>({name,value:composed?g.count:g.sum/g.count}));meaning=composed?'counts':'means'}
  }
  data=orderedCategories(data,d=>d.name,chart.categoryLabels);boxData=orderedCategories(boxData,b=>b.name,chart.categoryLabels);const orderedAxis=original==='histogram'||data.length>0&&data.every(d=>intervalStart(d.name)!==null||d.name.trim()&&Number.isFinite(Number(d.name)));
- return {view,orderedAxis,groupCounts,original,options:[original,...PLOT_TYPES.filter(v=>v!==original&&options.has(v))],data,points,paired,boxes:boxData,meaning};
+ return {view,orderedAxis,groupCounts,original,options:[...new Set([options.has(original)?original:view,...PLOT_TYPES.filter(v=>options.has(v))])],data,points,paired,boxes:boxData,meaning};
 }

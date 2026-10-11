@@ -13,5 +13,11 @@ console.log('Adaptive chart display checks passed: AI default, compatible paired
 const many={...scatter,points:Array.from({length:30},(_,i)=>({x:i,y:i*2,group:String(i)}))};assert.equal(chartDisplay(many,"bar").data.length,10);assert.equal(chartDisplay({...scatter,view:"histogram",labels:["0 — 10","10 — 20"],values:[1,2]},"bar").data[1].value,2);
 
 assert.notEqual(categoryColor("Lunch"),categoryColor("Dinner"));
+assert.equal(chartDisplay({...agg,view:'line',values:[10,5]},'line').view,'bar');
+assert.ok(!chartDisplay(agg,'bar').options.includes('line'));
+assert.equal(chartDisplay({...agg,view:'pie',aggregation:'mean',values:[10,5]},'pie').view,'bar');
+const crowded={...agg,view:'donut',aggregation:'sum',labels:Array.from({length:7},(_,i)=>String.fromCharCode(65+i)),values:Array(7).fill(10)};
+assert.equal(chartDisplay(crowded,'donut').view,'bar');assert.ok(!chartDisplay(crowded,'bar').options.includes('pie'));
+assert.equal(chartDisplay({...agg,time:true,view:'line'},'line').view,'line');
 
 const binned=chartDisplay(many,'area');assert.equal(binned.view,'bar');assert.ok(binned.data.every((d,i,a)=>!i||Number(a[i-1].name.split(' — ')[0])<Number(d.name.split(' — ')[0])));assert.equal(Object.values(binned.groupCounts).reduce((a,b)=>a+b,0),30);assert.ok(binned.data.every(d=>binned.groupCounts[d.name]>0));assert.deepEqual(chartDisplay({...agg,labels:['Sun','Thur','Fri','Sat'],values:[4,1,2,3]},'bar').data.map(d=>d.name),['Thur','Fri','Sat','Sun']);console.log('Numeric bins sorted, grouped averages use bars with counts, and literal weekdays use calendar order.');

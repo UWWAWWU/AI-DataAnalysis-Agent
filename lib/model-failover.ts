@@ -1,7 +1,7 @@
 export type ModelOption={id:string;label:string};
 const SWITCH_CODES=new Set(['AI_HTTP_400','AI_HTTP_401','AI_HTTP_403','AI_HTTP_429','AI_HTTP_500','AI_HTTP_502','AI_HTTP_503','AI_HTTP_504','AI_HTTP_404','AI_TIMEOUT','AI_CONNECTION','AI_MODEL_DISABLED','AI_MODEL_UNAVAILABLE','AI_CONFIGURATION','AI_REQUEST','AI_VALIDATION','AI_JSON','AI_EMPTY','AI_TRUNCATED','AI_CATALOG_UNAVAILABLE']);
 const cooldowns=new Map<string,number>();
-const modelFamily=(id:string)=>id.replace(/^relink:/,'').match(/^[a-z]+/i)?.[0]?.toLowerCase()||id;
+const modelFamily=(id:string)=>id.replace(/^(?:relink|lapak):/,'').match(/^[a-z]+/i)?.[0]?.toLowerCase()||id;
 export function clearModelCooldowns(){cooldowns.clear()}
 export async function withModelFailover<T>(selected:string,catalog:ModelOption[],run:(id:string)=>Promise<T>,onAttempt?:(id:string,index:number,previous?:{model:string;code:string;message:string},total?:number)=>void){
  const available=[...new Set(catalog.map(m=>m.id))];const start=available.indexOf(selected);
