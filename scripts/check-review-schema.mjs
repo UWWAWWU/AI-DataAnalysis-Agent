@@ -10,6 +10,11 @@ assert.ok(recommendationGuidance(findings).includes(JSON.stringify({id:findings[
 assert.deepEqual(schema.properties.recommendations.items.properties.id.enum,findings.map(f=>f.id));
 assert.equal(schema.properties.recommendations.minItems,2);assert.equal(schema.properties.recommendations.maxItems,2);
 assert.deepEqual(validateRecommendations({recommendations:items},findings),items);
+const aliased=items.map((r,i)=>({...r,recommended:i?'delete_rows':'fill_median'}));
+assert.deepEqual(validateRecommendations({recommendations:aliased},findings).map(r=>r.recommended),['median','remove']);
+assert.equal(aliased[0].recommended,'fill_median','Do not mutate the provider response');
+assert.throws(()=>validateRecommendations({recommendations:items.map((r,i)=>({...r,recommended:i?'fill_median':'keep'}))},findings),/unsupported for this finding/);
+for(const token of ['impute','drop','toString'])assert.throws(()=>validateRecommendations({recommendations:items.map(r=>({...r,recommended:token}))},findings),/unsupported for this finding/);
 for(const [change,message] of [[{id:'invented'},'exact supplied finding ID'],[{recommended:'median'},'unsupported for this finding'],[{reason:''},'nonempty strings']]){
  const invalid=items.map(x=>({...x}));Object.assign(invalid[1],change);
  assert.throws(()=>validateRecommendations({recommendations:invalid},findings),new RegExp(message));
