@@ -1,0 +1,14 @@
+import fs from 'node:fs';
+import ts from 'typescript';
+import assert from 'node:assert/strict';
+const source=fs.readFileSync('app/analyst.tsx','utf8');
+const handler=source.slice(source.indexOf('async function ask()'),source.indexOf('async function retryInsight()'));
+const compiled=ts.transpileModule('export '+handler,{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText;
+let args,messages=[],states=[],calls=0;
+const env={preparation:{findings:[]},kept:[],reviewData:null,question:'Use the existing zone totals',busy:false,locale:'en',replyLanguage:()=> 'en',requestLanguage:{current:null},localization:{remember:()=>{}},setQuestion:()=>{},setChatBusy:value=>states.push(['busy',value]),setMessages:fn=>{messages=fn(messages)},agentCurrent:{current:{phase:'clarify',goal:'Compare zone totals',clarificationCount:1}},setChatUpdating:value=>states.push(['updating',value]),prepare:async(...values)=>{args=values;return true},profile:{},filter:{},localRef:{current:null},ai:async()=>{calls++;throw Error('Must resume the pending investigation')}};
+const exports={};new Function(...Object.keys(env),'exports',compiled)(...Object.values(env),exports);
+await exports.ask();
+assert.equal(calls,0);assert.equal(args[3],env.question);assert.equal(args[4],'Compare zone totals');assert.equal(args[5],true);
+assert.match(messages.at(-1).text,/continued using your answer/);assert.equal(env.requestLanguage.current,null);
+assert.deepEqual(states,[['busy',true],['updating',true],['updating',false],['busy',false]]);
+console.log('A chat answer resumes the pending clarification instead of starting a fresh investigation; UI busy states are cleared.');

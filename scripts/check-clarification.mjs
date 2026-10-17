@@ -1,0 +1,13 @@
+import fs from 'node:fs';
+import ts from 'typescript';
+import assert from 'node:assert/strict';
+const compile=source=>ts.transpileModule(source,{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.CommonJS}}).outputText;
+const module={exports:{}};
+new Function('require','exports',compile(fs.readFileSync('lib/python-contract.ts','utf8')))(()=>({validateSpec:()=>{}}),module.exports);
+const {executablePlan,validatePlan,readableInitialPlan}=module.exports;
+const questions=['Which hours of the day exhibit peak demand?', 'How significantly does the workingday status affect total rental volume?', 'What is the impact of weather conditions on the average hourly rental rate?'];
+const plan={title:'Bike sharing',objective:'Explore demand',code:'# Trusted engine',steps:[],assumptions:[],questions,dashboard:{metrics:[],kpis:[],charts:[]}};
+assert.deepEqual(executablePlan(validatePlan(plan)).questions,[]);
+assert.deepEqual(plan.questions,questions);
+assert.deepEqual(executablePlan(plan,true).questions,questions);
+console.log('Legacy plan research questions remain optional; essential clarification and continuation are exercised by check-analysis-agent.mjs.');

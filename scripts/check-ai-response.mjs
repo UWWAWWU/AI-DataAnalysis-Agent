@@ -1,0 +1,15 @@
+import fs from 'node:fs';import ts from 'typescript';import assert from 'node:assert/strict';
+const mod=async path=>import('data:text/javascript;base64,'+Buffer.from(ts.transpileModule(fs.readFileSync(path,'utf8'),{compilerOptions:{module:ts.ModuleKind.ESNext,target:ts.ScriptTarget.ES2022}}).outputText).toString('base64'));
+const {parseAIResponse,PLAN_SCHEMA}=await mod('lib/ai-response.ts');
+const response=(text,finishReason='STOP')=>({candidates:[{finishReason,content:{parts:[{thought:true,text:'ignore thinking'},{text}]}}]});
+assert.deepEqual(parseAIResponse(response('```json\n{"ok":true}\n```')),{ok:true});
+assert.deepEqual(parseAIResponse(response('Here is the requested JSON:\n```json\n{"action":"tool","purpose":"Inspect data","tool":{"name":"quality"}}\n```\nEnd.')),{action:'tool',purpose:'Inspect data',tool:{name:'quality'}});
+assert.throws(()=>parseAIResponse(response('First {"ok":true} then {"ok":false}')),e=>e.code==='AI_JSON');
+assert.throws(()=>parseAIResponse(response('Text {"tool":{"name":"quality"}')),e=>e.code==='AI_JSON');
+assert.throws(()=>parseAIResponse(response('{"ok":true,}')),e=>e.code==='AI_JSON');
+assert.throws(()=>parseAIResponse(response('{"unfinished":')),e=>e.code==='AI_JSON');
+assert.throws(()=>parseAIResponse(response('{}','MAX_TOKENS')),e=>e.code==='AI_TRUNCATED');
+assert.throws(()=>parseAIResponse({}),e=>e.code==='AI_EMPTY');
+assert.throws(()=>parseAIResponse({promptFeedback:{blockReason:'SAFETY'}}),e=>e.code==='AI_BLOCKED');
+assert.ok(PLAN_SCHEMA.required.includes('dashboard'));assert.ok(!PLAN_SCHEMA.required.includes('code'));
+console.log('AI response parsing and validation checks passed.');
