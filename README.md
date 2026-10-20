@@ -80,9 +80,9 @@ The HTML export includes aggregates for supported filter selections. AI chat and
 
 ## Available models
 
-Settings lists the model choices that passed the application audit. The server checks the approved list before forwarding a model request.
+The upload workspace and Settings list the model choices that passed the application audit. The server checks the approved list before forwarding a model request.
 
-Choose a model in Settings. Availability can change, and passing the audit does not guarantee success on every dataset.
+Choose a model before uploading or keep Auto. The active choice stays visible in the workspace and is used for subsequent AI requests. Availability can change, and passing the audit does not guarantee success on every dataset.
 
 ## Technology
 

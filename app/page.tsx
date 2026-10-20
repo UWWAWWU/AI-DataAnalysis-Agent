@@ -1,2 +1,2 @@
-import Analyst from './analyst';
-export default function Page(){return <Analyst/>}
+import ProductHome from './product-home';
+export default function Page(){return <ProductHome/>}

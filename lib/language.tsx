@@ -1,7 +1,9 @@
 'use client';
+import {setProductLocale} from '@/components/product-locale';
 import {tabLanguage} from './tab-language';
 import {createContext,useContext,useEffect,useState,type ReactNode} from 'react';
 export const ID:Record<string,string>={
+'Analysis model':'Model analisis','Used for the next AI request. Completed calculations are retained.':'Dipakai untuk permintaan AI berikutnya. Perhitungan yang selesai tetap disimpan.','Choose a model before uploading, or start with Auto.':'Pilih model sebelum mengunggah, atau mulai dengan Auto.','Auto':'Otomatis','Model unavailable':'Model tidak tersedia',
 'Selected rows':'Baris terpilih','Columns':'Kolom','data points':'titik data','Workspace':'Ruang kerja','Reset':'Atur ulang','Sheet':'Lembar','AI':'AI','identifier':'pengenal','date':'tanggal','number':'angka','text':'teks','boolean':'boolean','Thinking…':'Sedang berpikir…','Updating the dashboard…':'Sedang memperbarui dashboard…','Updating the language…':'Sedang menyesuaikan bahasa…','Retry translation':'Coba ulang terjemahan','The language update could not finish. Please retry.':'Pergantian bahasa belum selesai. Silakan coba lagi.',
 'This model is not available in the current model selection. Choose another model in Settings.':'Model ini tidak tersedia pada pilihan saat ini. Pilih model lain di Pengaturan.',
 'This model is not enabled for your provider account. Choose another model or check your provider settings.':'Model ini belum diaktifkan untuk akun penyedia Anda. Pilih model lain atau periksa pengaturan penyedia.', 'Models listed by the provider may require additional account access.':'Model yang tercantum dari penyedia mungkin memerlukan akses tambahan pada akun.', 'Refresh models':'Muat ulang model', 'The selected AI provider is not configured.':'Penyedia AI yang dipilih belum dikonfigurasi.',
@@ -18,8 +20,8 @@ const Context=createContext({locale:'en' as 'en'|'id',setLocale:(_:'en'|'id')=>{
 const LANGUAGE_KEY='analysis-tab-language';
 export function LanguageProvider({children,initialLocale}:{children:ReactNode;initialLocale?:'en'|'id'}){
  const [locale,setState]=useState<'en'|'id'>(initialLocale||'en');
- useEffect(()=>{const navigation=performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming|undefined;let chosen:'en'|'id'='en';try{chosen=initialLocale||tabLanguage(navigation?.type,sessionStorage.getItem(LANGUAGE_KEY));sessionStorage.setItem(LANGUAGE_KEY,chosen)}catch{}setState(chosen);document.documentElement.lang=chosen},[]);
- const setLocale=(chosen:'en'|'id')=>{setState(chosen);document.documentElement.lang=chosen;try{sessionStorage.setItem(LANGUAGE_KEY,chosen)}catch{}};
+ useEffect(()=>{const navigation=performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming|undefined;let chosen:'en'|'id'='en';try{const preferred=localStorage.getItem('analysis-preview-language-v2');chosen=initialLocale||(preferred==='id'||preferred==='en'?preferred:tabLanguage(navigation?.type,sessionStorage.getItem(LANGUAGE_KEY)));sessionStorage.setItem(LANGUAGE_KEY,chosen)}catch{}setState(chosen);document.documentElement.lang=chosen},[]);
+ const setLocale=(chosen:'en'|'id')=>{setProductLocale(chosen);setState(chosen);document.documentElement.lang=chosen;try{sessionStorage.setItem(LANGUAGE_KEY,chosen)}catch{}};
  return <Context.Provider value={{locale,setLocale,t:s=>locale==='id'?(ID[s]||s):s}}>{children}</Context.Provider>
 }
 export const useLanguage=()=>useContext(Context);
