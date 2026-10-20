@@ -35,4 +35,9 @@ export function chartCaption(chart:Chart,locale:'en'|'id'='en'){
  return caption+(scope?' · '+(locale==='id'?'Cakupan: ':'Scope: ')+scope:'')+(codes?(locale==='id'?' · Arti kode tidak tersedia dalam data':' · Code meanings not provided in the data'):'');
 }
 
-export function scatterDomain([low,high]:readonly [number,number]):[number,number]{const padding=(high-low||Math.abs(low)||1)*.05;return [low-padding,high+padding];}
+export function scatterDomain([low,high]:readonly [number,number]):[number,number]{const padding=(high-low||Math.abs(low)||1)*.05;return [low>=0?Math.max(0,low-padding):low-padding,high+padding];}
+
+export function intervalTick(label:string,locale:'en'|'id'='en'){
+ const edges=label.split(/\s+[—–−]\s+/);if(edges.length!==2)return label;
+ return edges.map(edge=>{const value=Number(locale==='id'?edge.replaceAll('.','').replace(',','.'):edge.replaceAll(',',''));return Number.isFinite(value)?new Intl.NumberFormat(locale==='id'?'id-ID':'en-GB',{notation:'compact',maximumFractionDigits:1}).format(value):edge}).join(' – ');
+}

@@ -1,10 +1,10 @@
 import fs from 'node:fs';import ts from 'typescript';import assert from 'node:assert/strict';
 const moduleURL=async file=>{let code=ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.ESNext,target:ts.ScriptTarget.ES2022}}).outputText;for(const match of [...code.matchAll(/from ['\"](\.\/[^'\"]+)['\"]/g)])code=code.replaceAll(match[1],await moduleURL('lib/'+match[1].slice(2)+'.ts'));return 'data:text/javascript;base64,'+Buffer.from(code).toString('base64')};const load=async file=>import(await moduleURL(file));
-const {chartCaption,chartMeasure,kpiCaptions,columnLabel,scatterDomain}=await load('lib/visual-labels.ts');
+const {chartCaption,chartMeasure,kpiCaptions,columnLabel,scatterDomain,intervalTick}=await load('lib/visual-labels.ts');
 const {readableChart,inferCategoryLabels}=await load('lib/category-labels.ts');const {chartDisplay}=await load('lib/chart-display.ts');
 assert.equal(inferCategoryLabels([{Resolved:'True'},{Resolved:'False'}]).Resolved.values.True.en,'Yes');
 assert.equal(columnLabel('UnitPriceUSD'),'Unit Price USD');assert.equal(columnLabel('Dissolved_Oxygen_mg_L'),'Dissolved Oxygen mg/L');
-assert.deepEqual(scatterDomain([26,29]),[25.85,29.15]);assert.deepEqual(scatterDomain([0,0]),[-.05,.05]);
+assert.deepEqual(scatterDomain([26,29]),[25.85,29.15]);assert.deepEqual(scatterDomain([0,0]),[0,.05]);
 const scatter={title:'Price vs quantity',view:'scatter',xColumn:'Units',yColumn:'Unit_Price_USD',groupColumn:'Units',aggregation:'count',measureColumns:[],labels:[],values:[]};assert.match(chartCaption(scatter),/X: Units · Y: Unit Price USD/);assert.doesNotMatch(chartCaption(scatter),/Record count by Units/);
 assert.match(chartCaption({...scatter,view:'histogram',xColumn:'Delivery_Days'}),/Delivery Days · observations per interval/);
 const trend=readableChart({title:'Monthly sales',time:true,labels:['2026-01','2026-02'],values:[10,20]},'en');assert.deepEqual(trend.labels,['Jan 2026','Feb 2026']);assert.deepEqual(trend.values,[10,20]);
@@ -16,3 +16,8 @@ assert.match(chartCaption({...average,metricRules:[{column:'Satisfaction_Score',
 const spec={metrics:[{id:'rate',operation:'mean',columns:['Exchange_Rate'],rules:[]},{id:'resolved',operation:'count',columns:[],rules:[]},{id:'rows',operation:'count',columns:[],rules:[]}],kpis:[{label:'Average exchange rate',metric:'rate'},{label:'Resolution rate',numerator:'resolved',denominator:'rows',scale:100}]};const captions=kpiCaptions(spec);assert.equal(captions['Average exchange rate'].percent,false);assert.equal(captions['Resolution rate'].percent,true);assert.match(captions['Average exchange rate'].caption,/Average Exchange Rate/);assert.match(captions['Resolution rate'].caption,/÷.*× 100/);
 const chart=fs.readFileSync('components/data-chart.tsx','utf8');assert.ok(chart.includes('groupCounts[item?.payload?.name]'));assert.ok(chart.includes('chart.groupColumn===chart.xColumn'));assert.ok(!fs.readFileSync('components/dashboard-canvas.tsx','utf8').includes('/percent|rate|%/i'));
 console.log('Readability verified: truthful scatter/histogram captions, explicit units, readable dates and intervals, honest unknown-code labels, named tooltip measures, aggregation-safe composition charts and formula-driven percentages.');
+
+assert.deepEqual(scatterDomain([0,20000]),[0,21000]);assert.deepEqual(scatterDomain([-10,20]),[-11.5,21.5]);
+assert.equal(intervalTick('5,889.99 – 7,853.32'),'5.9k – 7.9k');assert.equal(intervalTick('5.889,99 – 7.853,32','id').replaceAll('\u00a0',' '),'5,9 rb – 7,9 rb');
+
+for(const locale of ['en','id']){const source={title:'Area',view:'histogram',labels:['374 — 12075','12075 — 23776','58879 — 70580'],values:[4,8,1]};const shown=chartDisplay(readableChart(source,locale),'histogram');assert.deepEqual(shown.data.map(d=>d.value),[4,8,1]);assert.ok(shown.data[0].name.startsWith('374'));}

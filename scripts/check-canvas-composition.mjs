@@ -17,3 +17,5 @@ for(const c of cases){const original=structuredClone(c.charts),keys=c.charts.map
 assert.ok(chartRows(chart('ranking',100))>=27);console.log('Adaptive chart grouping, complete canvas coverage, no overlaps, and immutable inputs passed.');
 
 assert.notDeepEqual(composeDashboard([chart('line',24,{time:true}),chart('bar'),chart('histogram'),chart('donut')],['a','b','c','d'],[]),composeDashboard(Array.from({length:4},()=>chart('donut')),['a','b','c','d'],[]));
+
+const districtCharts=[chart('ranking',29),chart('ranking',29),chart('histogram',10)];const districtTiles=composeDashboard(districtCharts,['districtA','districtB','distribution'],[]);assert.deepEqual(districtTiles.map(t=>[t.x,t.y,t.w,t.h]),[[0,0,6,3],[6,0,6,3],[0,3,12,1]]);

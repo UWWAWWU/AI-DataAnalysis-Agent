@@ -27,6 +27,14 @@ export function chartRows(chart:Pick<Chart,'view'|'labels'|'sampled'|'title'>,vi
 export function composeDashboard(charts:Chart[],keys:string[],_metrics:string[],options:{width?:number;height?:number;layout?:string;kpiPlacement?:KpiPlacement;minimums?:Record<string,number>;editing?:boolean}={}):Tile[]{
  if(!charts.length)return [];
  const width=options.width||1552,height=options.height||650,n=charts.length;
+ // Dense categorical charts need readable rows and enough width for their labels.
+ const dense=charts.map((chart,index)=>({chart,key:keys[index]})).filter(({chart})=>!chart.time&&['ranking','bar'].includes(chart.view||'ranking')&&chart.labels.length>12);
+ if(dense.length){
+  const denseKeys=new Set(dense.map(item=>item.key));const output:Tile[]=[];let y=0;
+  for(let start=0;start<dense.length;start+=2){const pair=dense.slice(start,start+2);const h=Math.max(...pair.map(({chart})=>Math.ceil((chart.labels.length*24+140)/320)));pair.forEach(({key},i)=>output.push({key,x:i*6,y,w:pair.length===1?12:6,h,page:0}));y+=h;}
+  const remaining=charts.map((chart,index)=>({chart,key:keys[index]})).filter(item=>!denseKeys.has(item.key));
+  return [...output,...composeDashboard(remaining.map(item=>item.chart),remaining.map(item=>item.key),[],options).map(tile=>({...tile,y:tile.y+y}))];
+ }
  // A focal relationship or explicitly wide chart gets twice the area of supporting views.
  const hero=charts.findIndex(c=>c.width==='wide'||c.view==='scatter');
  if(hero>=0&&n>=7&&n<=9){

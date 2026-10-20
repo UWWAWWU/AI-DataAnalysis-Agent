@@ -32,6 +32,6 @@ export function chartDisplay(chart:Chart,requestedView:string){
   else if(view==='boxplot'){boxData=boxes(grouped,paired);meaning='quartiles'}
   else {const groups=new Map<string,{sum:number;count:number}>();for(const p of grouped){const name=p.group||'All',g=groups.get(name)||{sum:0,count:0};g.sum+=paired?p.y!:p.x;g.count++;groups.set(name,g)}data=[...groups].map(([name,g])=>({name,value:composed?g.count:g.sum/g.count}));meaning=composed?'counts':'means'}
  }
- data=orderedCategories(data,d=>d.name,chart.categoryLabels);boxData=orderedCategories(boxData,b=>b.name,chart.categoryLabels);const orderedAxis=original==='histogram'||data.length>0&&data.every(d=>intervalStart(d.name)!==null||d.name.trim()&&Number.isFinite(Number(d.name)));
+ data=original==='histogram'?data:orderedCategories(data,d=>d.name,chart.categoryLabels);boxData=orderedCategories(boxData,b=>b.name,chart.categoryLabels);const orderedAxis=original==='histogram'||data.length>0&&data.every(d=>intervalStart(d.name)!==null||d.name.trim()&&Number.isFinite(Number(d.name)));
  return {view,orderedAxis,groupCounts,original,options:[...new Set([options.has(original)?original:view,...PLOT_TYPES.filter(v=>options.has(v))])],data,points,paired,boxes:boxData,meaning};
 }
